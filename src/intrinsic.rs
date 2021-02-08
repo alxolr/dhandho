@@ -6,7 +6,7 @@ pub enum Multiplier {
 }
 
 #[derive(PartialEq, Debug)]
-pub struct IntrisicBuilder {
+pub struct IntrinsicBuilder {
     // how much cash a business is making per year usually in millions
     free_cash_flow: Option<f32>,
     // expected rate of return for the investment
@@ -19,9 +19,9 @@ pub struct IntrisicBuilder {
     year_six_ten_growth: Option<f32>,
 }
 
-impl IntrisicBuilder {
-    pub fn new() -> IntrisicBuilder {
-        IntrisicBuilder {
+impl IntrinsicBuilder {
+    pub fn new() -> IntrinsicBuilder {
+        IntrinsicBuilder {
             free_cash_flow: None,
             discount_rate: Some(0.15),        // default 15%
             premium_multiplier: Some(10),     // default 10x
@@ -30,19 +30,19 @@ impl IntrisicBuilder {
         }
     }
 
-    pub fn free_cash_flow(mut self, cash: f32) -> IntrisicBuilder {
+    pub fn free_cash_flow(mut self, cash: f32) -> IntrinsicBuilder {
         self.free_cash_flow = Some(cash);
 
         self
     }
 
-    pub fn discount_rate(mut self, rate: f32) -> IntrisicBuilder {
+    pub fn discount_rate(mut self, rate: f32) -> IntrinsicBuilder {
         self.discount_rate = Some(rate);
 
         self
     }
 
-    pub fn premium_multiplier(mut self, multiplier: Multiplier) -> IntrisicBuilder {
+    pub fn premium_multiplier(mut self, multiplier: Multiplier) -> IntrinsicBuilder {
         match multiplier {
             Multiplier::Outstanding => self.premium_multiplier = Some(15),
             Multiplier::Standard => self.premium_multiplier = Some(10),
@@ -51,13 +51,13 @@ impl IntrisicBuilder {
         self
     }
 
-    pub fn year_one_five(mut self, growth: f32) -> IntrisicBuilder {
+    pub fn year_one_five(mut self, growth: f32) -> IntrinsicBuilder {
         self.year_one_five_growth = Some(growth);
 
         self
     }
 
-    pub fn year_six_ten(mut self, growth: f32) -> IntrisicBuilder {
+    pub fn year_six_ten(mut self, growth: f32) -> IntrinsicBuilder {
         self.year_six_ten_growth = Some(growth);
 
         self
@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn test_intrisic_builder() {
-        let expected = IntrisicBuilder {
+        let expected = IntrinsicBuilder {
             free_cash_flow: Some(15.),
             discount_rate: Some(0.15),
             premium_multiplier: Some(10),
@@ -110,7 +110,7 @@ mod tests {
             year_six_ten_growth: Some(0.05),
         };
 
-        let builded = IntrisicBuilder::new()
+        let builded = IntrinsicBuilder::new()
             .free_cash_flow(15.)
             .discount_rate(0.15)
             .year_one_five(0.05)
@@ -122,7 +122,7 @@ mod tests {
 
     #[test]
     fn test_compute_on_egy_example() {
-        let intrisic = IntrisicBuilder {
+        let intrisic = IntrinsicBuilder {
             free_cash_flow: Some(15.),
             discount_rate: Some(0.15),
             premium_multiplier: Some(15),

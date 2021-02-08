@@ -1,13 +1,13 @@
-mod intrisic;
+mod intrinsic;
 
-use intrisic::IntrisicBuilder;
+use intrinsic::IntrinsicBuilder;
 
 fn main() {
     println!("Hello, world!");
-    let val = IntrisicBuilder::new()
+    let val = IntrinsicBuilder::new()
         .free_cash_flow(15.)
         .discount_rate(0.15)
         .compute();
 
-    println!("Intrisic Value {}", val);
+    println!("Intrinsic Value {}", val);
 }
