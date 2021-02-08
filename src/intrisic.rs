@@ -23,10 +23,10 @@ impl IntrisicBuilder {
     pub fn new() -> IntrisicBuilder {
         IntrisicBuilder {
             free_cash_flow: None,
-            discount_rate: None,
-            premium_multiplier: None,
-            year_six_ten_growth: None,
-            year_one_five_growth: None,
+            discount_rate: Some(0.15),        // default 15%
+            premium_multiplier: Some(10),     // default 10x
+            year_six_ten_growth: Some(0.05),  // default 5%
+            year_one_five_growth: Some(0.05), // default 5%
         }
     }
 
@@ -77,7 +77,7 @@ impl IntrisicBuilder {
             } else if year < 6 && year > 1 {
                 // apply five years growth and discount
                 let updated_cashflow = free_cash_flow * (1. + year_one_five_growth).powi(year - 1);
-                total +=  updated_cashflow / discount_divisor;
+                total += updated_cashflow / discount_divisor;
             } else if year < 10 && year >= 6 {
                 // apply six year growth and discount
                 let updated_cashflow = free_cash_flow * (1. + year_six_ten_growth).powi(year - 1);
