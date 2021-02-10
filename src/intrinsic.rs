@@ -1,3 +1,4 @@
+use crate::financial::pv;
 use core::f32;
 
 pub enum Multiplier {
@@ -5,94 +6,106 @@ pub enum Multiplier {
     Standard,
 }
 
+#[derive(Debug, PartialEq)]
+pub struct GrowthAssumption(pub u8, pub f32); // number of years, fcf growth rate
+
+#[derive(Debug, PartialEq)]
+pub struct GrowthAssumptionBuilder {
+    pub assumptions: Vec<GrowthAssumption>,
+}
+impl GrowthAssumptionBuilder {
+    pub fn new() -> Self {
+        Self { assumptions: vec![] }
+    }
+
+    pub fn add(mut self, assumption: GrowthAssumption) -> GrowthAssumptionBuilder {
+        self.assumptions.push(assumption);
+
+        self
+    }
+}
+
 #[derive(PartialEq, Debug)]
 pub struct IntrinsicBuilder {
-    // how much cash a business is making per year usually in millions
-    free_cash_flow: Option<f32>,
+    cash: Option<f32>,
+    // free cash flow
+    fcf: Option<f32>,
     // expected rate of return for the investment
-    discount_rate: Option<f32>,
+    rate: Option<f32>,
     // usually it's 10 or 15 for premium bussinesses
-    premium_multiplier: Option<u8>,
-    // estimated percentages for growth 1-5 years
-    year_one_five_growth: Option<f32>,
-    // estiamted percentages for growth 6-10 years
-    year_six_ten_growth: Option<f32>,
+    multiplier: Option<u8>,
+    // some growth assumptions
+    growth_assumptions: Option<GrowthAssumptionBuilder>,
 }
 
 impl IntrinsicBuilder {
     pub fn new() -> IntrinsicBuilder {
         IntrinsicBuilder {
-            free_cash_flow: None,
-            discount_rate: Some(0.15),        // default 15%
-            premium_multiplier: Some(10),     // default 10x
-            year_six_ten_growth: Some(0.05),  // default 5%
-            year_one_five_growth: Some(0.05), // default 5%
+            fcf: None,
+            cash: Some(0.),
+            rate: Some(0.15),     // default 15%
+            multiplier: Some(10), // default 10x
+            growth_assumptions: Some(
+                GrowthAssumptionBuilder::new()
+                    .add(GrowthAssumption(5, 0.05))
+                    .add(GrowthAssumption(5, 0.05)),
+            ), // default 5 % of fcf growth
         }
     }
 
-    pub fn free_cash_flow(mut self, cash: f32) -> IntrinsicBuilder {
-        self.free_cash_flow = Some(cash);
+    pub fn add_fcf(mut self, cash: f32) -> IntrinsicBuilder {
+        self.fcf = Some(cash);
 
         self
     }
 
-    pub fn discount_rate(mut self, rate: f32) -> IntrinsicBuilder {
-        self.discount_rate = Some(rate);
+    pub fn add_rate(mut self, rate: f32) -> IntrinsicBuilder {
+        self.rate = Some(rate);
 
         self
     }
 
-    pub fn premium_multiplier(mut self, multiplier: Multiplier) -> IntrinsicBuilder {
+    pub fn add_multiplier(mut self, multiplier: Multiplier) -> IntrinsicBuilder {
         match multiplier {
-            Multiplier::Outstanding => self.premium_multiplier = Some(15),
-            Multiplier::Standard => self.premium_multiplier = Some(10),
+            Multiplier::Outstanding => self.multiplier = Some(15),
+            Multiplier::Standard => self.multiplier = Some(10),
         }
 
         self
     }
 
-    pub fn year_one_five(mut self, growth: f32) -> IntrinsicBuilder {
-        self.year_one_five_growth = Some(growth);
+    pub fn add_growth_assumptions(mut self, growths: GrowthAssumptionBuilder) -> IntrinsicBuilder {
+        self.growth_assumptions = Some(growths);
 
         self
     }
 
-    pub fn year_six_ten(mut self, growth: f32) -> IntrinsicBuilder {
-        self.year_six_ten_growth = Some(growth);
+    pub fn add_cash(mut self, cash: f32) -> IntrinsicBuilder {
+        self.cash = Some(cash);
 
         self
     }
 
     pub fn compute(self) -> f32 {
-        let mut total = 0.;
-        let free_cash_flow = self.free_cash_flow.unwrap();
-        let discount_rate = self.discount_rate.unwrap();
-        let year_one_five_growth = self.year_one_five_growth.unwrap();
-        let year_six_ten_growth = self.year_six_ten_growth.unwrap();
+        let mut result = 0.;
+        let mut fcf = self.fcf.unwrap();
+        let rate = self.rate.unwrap();
+        let growth_assumptions = self.growth_assumptions.unwrap().assumptions;
 
-        for year in 1..=10 {
-            let discount_divisor = (1. + discount_rate).powi(year);
-            if year == 1 {
-                total += free_cash_flow / discount_divisor;
-            } else if year < 6 && year > 1 {
-                // apply five years growth and discount
-                let updated_cashflow = free_cash_flow * (1. + year_one_five_growth).powi(year - 1);
-                total += updated_cashflow / discount_divisor;
-            } else if year < 10 && year >= 6 {
-                // apply six year growth and discount
-                let updated_cashflow = free_cash_flow * (1. + year_six_ten_growth).powi(year - 1);
-                total += updated_cashflow / discount_divisor;
-            } else if year == 10 {
-                // apply six year growth
-                let updated_cashflow = free_cash_flow * (1. + year_six_ten_growth).powi(year - 1);
-                let business_sell_price =
-                    updated_cashflow * self.premium_multiplier.unwrap() as f32;
-                // apply discount
-                total += ((updated_cashflow + business_sell_price) / discount_divisor).floor();
+        let mut year = 0;
+
+        for growth in growth_assumptions.iter() {
+            for _ in 1..=growth.0 {
+                year += 1;
+                fcf = fcf * (1. + growth.1);
+                result += pv(rate, year, fcf); // discount the fcf
             }
         }
 
-        total.round()
+        let sale_price = pv(rate, year, fcf * self.multiplier.unwrap() as f32);
+        result += sale_price + self.cash.unwrap();
+
+        result.round()
     }
 }
 
@@ -103,33 +116,39 @@ mod tests {
     #[test]
     fn test_intrisic_builder() {
         let expected = IntrinsicBuilder {
-            free_cash_flow: Some(15.),
-            discount_rate: Some(0.15),
-            premium_multiplier: Some(10),
-            year_one_five_growth: Some(0.05),
-            year_six_ten_growth: Some(0.05),
+            cash: Some(0.),
+            fcf: Some(15.),
+            rate: Some(0.15),
+            multiplier: Some(10),
+            growth_assumptions: Some(
+                GrowthAssumptionBuilder::new()
+                    .add(GrowthAssumption(5, 0.05))
+                    .add(GrowthAssumption(5, 0.05)),
+            ),
         };
 
         let builded = IntrinsicBuilder::new()
-            .free_cash_flow(15.)
-            .discount_rate(0.15)
-            .year_one_five(0.05)
-            .year_six_ten(0.05)
-            .premium_multiplier(Multiplier::Standard);
+            .add_fcf(15.)
+            .add_rate(0.15)
+            .add_multiplier(Multiplier::Standard);
 
         assert_eq!(expected, builded);
     }
 
     #[test]
-    fn test_compute_on_egy_example() {
+    fn test_compute_on_bbby_example() {
         let intrisic = IntrinsicBuilder {
-            free_cash_flow: Some(15.),
-            discount_rate: Some(0.15),
-            premium_multiplier: Some(15),
-            year_one_five_growth: Some(0.05),
-            year_six_ten_growth: Some(0.05),
+            fcf: Some(15.),
+            rate: Some(0.15),
+            cash: Some(40.),
+            multiplier: Some(15),
+            growth_assumptions: Some(
+                GrowthAssumptionBuilder::new()
+                    .add(GrowthAssumption(5, 0.05))
+                    .add(GrowthAssumption(5, 0.05)),
+            ),
         };
 
-        assert_eq!(intrisic.compute(), 176.);
+        assert_eq!(intrisic.compute(), 225.);
     }
 }
