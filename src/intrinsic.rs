@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn test_intrisic_builder() {
         let expected = IntrinsicBuilder {
-            cash: Some(0.),
+            cash: Some(10.),
             fcf: Some(15.),
             rate: Some(0.15),
             multiplier: Some(10),
@@ -130,13 +130,19 @@ mod tests {
         let builded = IntrinsicBuilder::new()
             .add_fcf(15.)
             .add_rate(0.15)
+            .add_cash(10.)
+            .add_growth_assumptions(
+                GrowthAssumptionBuilder::new()
+                .add(GrowthAssumption(5, 0.05))
+                .add(GrowthAssumption(5, 0.05))
+            )
             .add_multiplier(Multiplier::Standard);
 
         assert_eq!(expected, builded);
     }
 
     #[test]
-    fn test_compute_on_bbby_example() {
+    fn test_compute_on_simple_example() {
         let intrisic = IntrinsicBuilder {
             fcf: Some(15.),
             rate: Some(0.15),
