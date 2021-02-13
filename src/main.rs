@@ -1,7 +1,9 @@
 mod financial;
+mod growth_assumption;
 mod intrinsic;
 
-use intrinsic::{GrowthAssumption, GrowthAssumptionBuilder, IntrinsicBuilder, Multiplier};
+use growth_assumption::{GrowthAssumption, GrowthAssumptionBuilder};
+use intrinsic::{IntrinsicBuilder, Multiplier};
 
 fn main() {
     println!("Hello, world!");
@@ -12,8 +14,8 @@ fn main() {
         .add_multiplier(Multiplier::Outstanding)
         .add_growth_assumptions(
             GrowthAssumptionBuilder::new()
-                .add(GrowthAssumption(5, 0.15))
-                .add(GrowthAssumption(5, 0.10)),
+                .add(GrowthAssumption(5, 0.15, None))
+                .add(GrowthAssumption(5, 0.10, None)),
         )
         .compute();
 

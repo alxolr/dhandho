@@ -1,28 +1,12 @@
-use crate::financial::pv;
+use crate::{
+    financial::pv,
+    growth_assumption::{GrowthAssumption, GrowthAssumptionBuilder},
+};
 use core::f32;
 
 pub enum Multiplier {
     Outstanding,
     Standard,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct GrowthAssumption(pub u8, pub f32); // number of years, fcf growth rate
-
-#[derive(Debug, PartialEq)]
-pub struct GrowthAssumptionBuilder {
-    pub assumptions: Vec<GrowthAssumption>,
-}
-impl GrowthAssumptionBuilder {
-    pub fn new() -> Self {
-        Self { assumptions: vec![] }
-    }
-
-    pub fn add(mut self, assumption: GrowthAssumption) -> GrowthAssumptionBuilder {
-        self.assumptions.push(assumption);
-
-        self
-    }
 }
 
 #[derive(PartialEq, Debug)]
@@ -47,8 +31,8 @@ impl IntrinsicBuilder {
             multiplier: Some(10), // default 10x
             growth_assumptions: Some(
                 GrowthAssumptionBuilder::new()
-                    .add(GrowthAssumption(5, 0.05))
-                    .add(GrowthAssumption(5, 0.05)),
+                    .add(GrowthAssumption(5, 0.05, None))
+                    .add(GrowthAssumption(5, 0.05, None)),
             ), // default 5 % of fcf growth
         }
     }
@@ -94,12 +78,10 @@ impl IntrinsicBuilder {
 
         let mut year = 0;
 
-        for growth in growth_assumptions.iter() {
-            for _ in 1..=growth.0 {
-                year += 1;
-                fcf = fcf * (1. + growth.1);
-                result += pv(rate, year, fcf); // discount the fcf
-            }
+        for assumption_rate in growth_assumptions.iter() {
+            year += 1;
+            fcf = fcf * (1. + assumption_rate); // discount the fcf
+            result += pv(rate, year, fcf);
         }
 
         let sale_price = pv(rate, year, fcf * self.multiplier.unwrap() as f32);
@@ -121,9 +103,7 @@ mod tests {
             rate: Some(0.15),
             multiplier: Some(10),
             growth_assumptions: Some(
-                GrowthAssumptionBuilder::new()
-                    .add(GrowthAssumption(5, 0.05))
-                    .add(GrowthAssumption(5, 0.05)),
+                GrowthAssumptionBuilder::new().add(GrowthAssumption(10, 0.05, None)),
             ),
         };
 
@@ -132,9 +112,7 @@ mod tests {
             .add_rate(0.15)
             .add_cash(10.)
             .add_growth_assumptions(
-                GrowthAssumptionBuilder::new()
-                .add(GrowthAssumption(5, 0.05))
-                .add(GrowthAssumption(5, 0.05))
+                GrowthAssumptionBuilder::new().add(GrowthAssumption(10, 0.05, None)),
             )
             .add_multiplier(Multiplier::Standard);
 
@@ -143,17 +121,14 @@ mod tests {
 
     #[test]
     fn test_compute_on_simple_example() {
-        let intrisic = IntrinsicBuilder {
-            fcf: Some(15.),
-            rate: Some(0.15),
-            cash: Some(40.),
-            multiplier: Some(15),
-            growth_assumptions: Some(
-                GrowthAssumptionBuilder::new()
-                    .add(GrowthAssumption(5, 0.05))
-                    .add(GrowthAssumption(5, 0.05)),
-            ),
-        };
+        let intrisic = IntrinsicBuilder::new()
+            .add_cash(40.)
+            .add_fcf(15.)
+            .add_rate(0.15)
+            .add_multiplier(Multiplier::Outstanding)
+            .add_growth_assumptions(
+                GrowthAssumptionBuilder::new().add(GrowthAssumption(10, 0.05, None)),
+            );
 
         assert_eq!(intrisic.compute(), 225.);
     }
