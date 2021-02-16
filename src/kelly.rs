@@ -3,7 +3,7 @@
  */
 
 #[derive(Debug, PartialEq, PartialOrd)]
-pub struct KellyAssumption(f32, f32);
+pub struct KellyAssumption(pub f32, pub f32);
 
 #[derive(Debug, PartialEq)]
 pub struct KellyAssumptionBuilder {
@@ -11,19 +11,19 @@ pub struct KellyAssumptionBuilder {
 }
 
 impl KellyAssumptionBuilder {
-    fn new() -> Self {
+    pub fn new() -> Self {
         KellyAssumptionBuilder {
             assumptions: vec![],
         }
     }
 
-    fn add(mut self, assumption: KellyAssumption) -> KellyAssumptionBuilder {
+    pub fn add(mut self, assumption: KellyAssumption) -> KellyAssumptionBuilder {
         self.assumptions.push(assumption);
 
         self
     }
 
-    fn compute(self) -> f32 {
+    pub fn compute(self) -> f32 {
         let max_wagger = self
             .assumptions
             .iter()

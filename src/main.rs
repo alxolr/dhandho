@@ -5,9 +5,9 @@ mod kelly;
 
 use growth_assumption::{GrowthAssumption, GrowthAssumptionBuilder};
 use intrinsic::{IntrinsicBuilder, Multiplier};
+use kelly::{KellyAssumption, KellyAssumptionBuilder};
 
 fn main() {
-    println!("Hello, world!");
     let val = IntrinsicBuilder::new()
         .add_fcf(3678.)
         .add_cash(1331.)
@@ -20,5 +20,12 @@ fn main() {
         )
         .compute();
 
-    println!("Intrinsic Value {}", val);
+    let kelly = KellyAssumptionBuilder::new()
+        .add(KellyAssumption(0.45, 2.2))
+        .add(KellyAssumption(0.5, 0.1))
+        .add(KellyAssumption(0.5, -1.0))
+        .compute();
+
+    println!("Intrinsic Value = {}", val);
+    println!("Kelly allocation = {}", kelly);
 }
