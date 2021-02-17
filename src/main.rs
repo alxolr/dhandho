@@ -2,6 +2,7 @@ mod financial;
 mod growth_assumption;
 mod intrinsic;
 mod kelly;
+mod money;
 
 use growth_assumption::{GrowthAssumption, GrowthAssumptionBuilder};
 use intrinsic::{IntrinsicBuilder, Multiplier};
