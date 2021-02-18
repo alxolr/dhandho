@@ -1,12 +1,43 @@
 use core::f32;
 use std::convert::TryFrom;
+use std::ops::{Div, Mul, Add, AddAssign};
 
 const THOUSAND: i64 = 1000;
 const MILION: i64 = 1000000;
 const BILION: i64 = 1000000000;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Money(i64);
+pub struct Money(pub i64);
+
+impl Div<f32> for Money {
+    type Output = Self;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        Money((self.0 as f32 / rhs).round() as i64)
+    }
+}
+
+impl Mul<f32> for Money {
+    type Output = Self;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Money((self.0 as f32 * rhs).round() as i64)
+    }
+}
+
+impl Add<Self> for Money {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Money(self.0 + rhs.0)
+    }
+}
+
+impl AddAssign for Money {
+    fn add_assign(&mut self, other: Self) {
+        *self = Money(self.0 + other.0)
+    }
+}
 
 impl TryFrom<f32> for Money {
     type Error = &'static str;
@@ -119,5 +150,12 @@ mod tests {
             let (input, expect) = test;
             assert_eq!(clean_up_after_zero(*input), *expect);
         }
+    }
+
+    #[test]
+    fn test_money_mul_floats() {
+        let money = Money(100);
+
+        assert_eq!(money * 10.65, Money(1065))
     }
 }
