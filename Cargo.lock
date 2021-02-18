@@ -80,6 +80,7 @@ name = "dhandho"
 version = "0.1.0"
 dependencies = [
  "dotenv",
+ "mocktopus",
  "reqwest",
  "select",
  "tendril",
@@ -470,6 +471,26 @@ checksum = "5a33c1b55807fbed163481b5ba66db4b2fa6cde694a5027be10fb724206c5897"
 dependencies = [
  "socket2",
  "winapi",
+]
+
+[[package]]
+name = "mocktopus"
+version = "0.7.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aacdb26c24b2faec2c9f7e8e9609dcc62024cf4408b886a4439a961b922d4cab"
+dependencies = [
+ "mocktopus_macros",
+]
+
+[[package]]
+name = "mocktopus_macros"
+version = "0.7.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c7a37573ee3c6277b249627b6f1fc5698ffb4cf45c3cb077384e085c803b535"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

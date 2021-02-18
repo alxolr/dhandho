@@ -77,7 +77,7 @@ impl IntrinsicBuilder {
 
         for assumption_rate in growth_assumptions.iter() {
             year += 1;
-            fcf = fcf * (1. + assumption_rate); // discount the fcf
+            fcf = fcf * (1. + assumption_rate);
             result += pv(rate, year, fcf);
         }
 

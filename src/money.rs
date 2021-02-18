@@ -35,7 +35,7 @@ impl Add<Self> for Money {
 
 impl AddAssign for Money {
     fn add_assign(&mut self, other: Self) {
-        *self = Money(self.0 + other.0)
+        self.0 = self.0 + other.0;
     }
 }
 
@@ -61,12 +61,12 @@ impl TryFrom<String> for Money {
                 let result = clean_up_after_zero((value * multiplier as f32) as i64);
                 return Ok(Money(result));
             } else {
-                Err("Couldn't parse the provided string")
+                Err("Couldn't parse the provided float string")
             }
         } else {
             let maybe_value = value.parse::<i64>();
             if maybe_value.is_err() {
-                Err("Couldn't parse the provided string")
+                Err("Couldn't parse the provided int string")
             } else {
                 Ok(Money(maybe_value.unwrap() * multiplier))
             }
