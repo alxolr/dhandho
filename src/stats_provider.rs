@@ -1,6 +1,3 @@
-#[cfg(test)]
-use mocktopus::macros::*;
-
 use std::convert::TryFrom;
 use std::error::Error;
 
@@ -18,7 +15,6 @@ pub struct StatsProvider {
     pub free_cash_flows: Option<Vec<Money>>,
 }
 
-#[cfg_attr(test, mockable)]
 impl StatsProvider {
     pub fn new(ticker: String) -> Self {
         StatsProvider {
@@ -63,22 +59,22 @@ impl StatsProvider {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use mocktopus::mocking::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use mocktopus::mocking::*;
 
-    #[test]
-    fn test_gather_free_cash_flows() {
-        StatsProvider::gather_free_cash_flows
-            .mock_safe(|_| MockResult::Return(Ok(vec![Money(100)])));
+//     #[test]
+//     fn test_gather_free_cash_flows() {
+//         StatsProvider::gather_free_cash_flows
+//             .mock_safe(|_| MockResult::Return(Ok(vec![Money(100)])));
 
-        assert_eq!(
-            StatsProvider::new("GPP".to_string()).gather().unwrap(),
-            StatsProvider {
-                ticker: "GPP".to_string(),
-                free_cash_flows: Some(vec![Money(100)])
-            }
-        )
-    }
-}
+//         assert_eq!(
+//             StatsProvider::new("GPP".to_string()).gather().unwrap(),
+//             StatsProvider {
+//                 ticker: "GPP".to_string(),
+//                 free_cash_flows: Some(vec![Money(100)])
+//             }
+//         )
+//     }
+// }
