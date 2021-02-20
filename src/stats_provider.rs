@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 use std::error::Error;
-
+use async_trait::async_trait;
 use reqwest::blocking::get;
 use select::{document, predicate};
 use tendril::StrTendril;
@@ -8,6 +8,13 @@ use tendril::StrTendril;
 use crate::money::Money;
 
 const PROVIDER: &'static str = "https://finance.yahoo.com/quote";
+
+
+#[async_trait]
+trait Prospector {
+    async fn get(&self) -> Vec<Money>;
+}
+
 
 #[derive(Debug, PartialEq)]
 pub struct StatsProvider {
