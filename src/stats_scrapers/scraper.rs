@@ -3,8 +3,8 @@ use async_trait::async_trait;
 
 #[derive(Debug)]
 pub struct KeyStats {
-    total_cash: Money,
-    mkt_cap: Money,
+    pub total_cash: Money,
+    pub mkt_cap: Money,
 }
 
 impl KeyStats {

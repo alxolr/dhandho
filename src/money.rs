@@ -1,6 +1,6 @@
-use core::f32;
-use std::convert::TryFrom;
+use core::{f32, fmt};
 use std::ops::{Add, AddAssign, Div, Mul};
+use std::{convert::TryFrom, fmt::Display};
 
 const THOUSAND: i64 = 1000;
 const MILION: i64 = 1000000;
@@ -44,6 +44,23 @@ impl TryFrom<f32> for Money {
 
     fn try_from(value: f32) -> Result<Self, Self::Error> {
         Ok(Money(value as i64))
+    }
+}
+
+impl Display for Money {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let as_str = self.0.to_string();
+        let vec_chars = as_str.chars().rev().collect::<Vec<char>>();
+        let res = vec_chars
+            .chunks(3)
+            .map(|chs| chs.iter().collect::<String>())
+            .collect::<Vec<_>>()
+            .join(",")
+            .chars()
+            .rev()
+            .collect::<String>();
+
+        write!(f, "{}", res)
     }
 }
 
@@ -161,5 +178,11 @@ mod tests {
     #[should_panic(expected = "ParseFloatError")]
     fn test_parse_broken_string_with_dot_throws_error() {
         Money::try_from("unparsable.string".to_string()).unwrap();
+    }
+
+    #[test]
+    fn test_display_money_format() {
+        let money = Money(1000);
+        assert_eq!(format!("{}", money), "1,000".to_string());
     }
 }

@@ -3,9 +3,8 @@ mod growth_assumption;
 mod intrinsic;
 mod kelly;
 mod money;
-mod stats_provider;
 mod stats_scrapers;
-mod test_mock;
+mod test_mock_example;
 
 use stats_scrapers::{scraper::Scraper, yahoo::Yahoo};
 use tokio::join;
