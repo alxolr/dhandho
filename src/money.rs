@@ -1,6 +1,6 @@
 use core::f32;
 use std::convert::TryFrom;
-use std::ops::{Div, Mul, Add, AddAssign};
+use std::ops::{Add, AddAssign, Div, Mul};
 
 const THOUSAND: i64 = 1000;
 const MILION: i64 = 1000000;
@@ -56,20 +56,12 @@ impl TryFrom<String> for Money {
 
         if value.contains(".") {
             let maybe_value = value.parse::<f32>();
-            if maybe_value.is_ok() {
-                let value = maybe_value.unwrap();
-                let result = clean_up_after_zero((value * multiplier as f32) as i64);
-                return Ok(Money(result));
-            } else {
-                Err("Couldn't parse the provided float string")
-            }
+            let value = maybe_value.unwrap();
+            let result = clean_up_after_zero((value * multiplier as f32) as i64);
+            Ok(Money(result))
         } else {
             let maybe_value = value.parse::<i64>();
-            if maybe_value.is_err() {
-                Err("Couldn't parse the provided int string")
-            } else {
-                Ok(Money(maybe_value.unwrap() * multiplier))
-            }
+            Ok(Money(maybe_value.unwrap() * multiplier))
         }
     }
 }
@@ -157,5 +149,17 @@ mod tests {
         let money = Money(100);
 
         assert_eq!(money * 10.65, Money(1065))
+    }
+
+    #[test]
+    #[should_panic(expected = "ParseIntError")]
+    fn test_parse_broken_string_throws_error() {
+        Money::try_from("unparsable string".to_string()).unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "ParseFloatError")]
+    fn test_parse_broken_string_with_dot_throws_error() {
+        Money::try_from("unparsable.string".to_string()).unwrap();
     }
 }
