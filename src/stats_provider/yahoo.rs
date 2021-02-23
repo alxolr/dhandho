@@ -1,10 +1,10 @@
-use std::{convert::TryFrom};
+use std::convert::TryFrom;
 
-use super::scraper::*;
+use super::provider::*;
 use crate::money::Money;
 use async_trait::async_trait;
 use reqwest::get;
-use select::{document::Document, predicate};
+use select::{document::Document, node::Node, predicate};
 use tendril::StrTendril;
 
 pub struct Yahoo {
@@ -22,7 +22,32 @@ impl Yahoo {
 }
 
 #[async_trait]
-impl Scraper for Yahoo {
+impl Provider for Yahoo {
+    async fn get_analysis(&self) -> Result<f32, Box<dyn std::error::Error>> {
+        let url = format!("{}/{}/analysis?p={}", self.url, self.ticker, self.ticker);
+        let body = get(&url).await?.text().await?;
+        let document = Document::from(StrTendril::from(body));
+        let values = document
+            .find(predicate::Name("span"))
+            .filter(|i| i.text().contains("Next 5 Years"))
+            .next()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .descendants()
+            .filter(|i| i.text().contains("%"))
+            .collect::<Vec<Node>>()
+            .first()
+            .unwrap()
+            .text();
+
+        let value = values.replace("%", "").parse::<f32>().unwrap() / 100.0;
+
+        Ok(value)
+    }
+
     async fn get_fcf(&self) -> Result<Vec<Money>, Box<dyn std::error::Error>> {
         let url = format!("{}/{}/cash-flow?p={}", self.url, self.ticker, self.ticker);
         let body = get(&url).await?.text().await?;
@@ -41,7 +66,7 @@ impl Scraper for Yahoo {
             .filter(|n| n.attr("data-test").unwrap_or("false") == "fin-col")
             .map(|n| n.text())
             .filter(|n| n.len() > 1)
-            .map(|n| Money::try_from(n.clone()).unwrap())
+            .map(|n| Money::try_from(n.clone()).unwrap() * 1000.0)
             .collect::<Vec<Money>>();
 
         Ok(values)

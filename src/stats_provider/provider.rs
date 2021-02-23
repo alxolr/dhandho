@@ -9,16 +9,21 @@ pub struct KeyStats {
 
 impl KeyStats {
     pub fn new(total_cash: Money, mkt_cap: Money) -> Self {
-        KeyStats { total_cash, mkt_cap }
+        KeyStats {
+            total_cash,
+            mkt_cap,
+        }
     }
 }
 
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
-pub trait Scraper {
+pub trait Provider {
     /*Get the Free Cash Flow*/
     async fn get_fcf(&self) -> Result<Vec<Money>, Box<dyn std::error::Error>>;
 
     /* Get the market capitalisation, company price */
     async fn get_key_stats(&self) -> Result<KeyStats, Box<dyn std::error::Error>>;
+
+    async fn get_analysis(&self) -> Result<f32, Box<dyn std::error::Error>>;
 }
