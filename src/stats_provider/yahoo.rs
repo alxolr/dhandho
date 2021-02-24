@@ -9,22 +9,20 @@ use tendril::StrTendril;
 
 pub struct Yahoo {
     url: String,
-    ticker: String,
 }
 
 impl Yahoo {
-    pub fn new(ticker: String) -> Self {
+    pub fn new() -> Self {
         Yahoo {
             url: "https://finance.yahoo.com/quote".to_string(),
-            ticker,
         }
     }
 }
 
 #[async_trait]
 impl Provider for Yahoo {
-    async fn get_analysis(&self) -> Result<f32, Box<dyn std::error::Error>> {
-        let url = format!("{}/{}/analysis?p={}", self.url, self.ticker, self.ticker);
+    async fn get_analysis(&self, ticker: &str) -> Result<f32, Box<dyn std::error::Error>> {
+        let url = format!("{}/{}/analysis?p={}", self.url, ticker, ticker);
         let body = get(&url).await?.text().await?;
         let document = Document::from(StrTendril::from(body));
         let values = document
@@ -48,10 +46,10 @@ impl Provider for Yahoo {
         Ok(value)
     }
 
-    async fn get_fcf(&self) -> Result<Vec<Money>, Box<dyn std::error::Error>> {
-        let url = format!("{}/{}/cash-flow?p={}", self.url, self.ticker, self.ticker);
+    async fn get_cash_flow(&self, ticker: &str) -> Result<Money, Box<dyn std::error::Error>> {
+        let url = format!("{}/{}/cash-flow?p={}", self.url, ticker, ticker);
         let body = get(&url).await?.text().await?;
-        let values = Document::from(StrTendril::from(body))
+        let value = Document::from(StrTendril::from(body))
             .find(predicate::Name("span"))
             .filter(|i| i.text().contains("Free"))
             .next()
@@ -66,27 +64,30 @@ impl Provider for Yahoo {
             .filter(|n| n.attr("data-test").unwrap_or("false") == "fin-col")
             .map(|n| n.text())
             .filter(|n| n.len() > 1)
-            .map(|n| Money::try_from(n.clone()).unwrap() * 1000.0)
-            .collect::<Vec<Money>>();
+            .map(|n| Money::try_from(n.clone()).unwrap() * 1000.0) // all stats are in thousands
+            .collect::<Vec<Money>>()
+            .first()
+            .unwrap()
+            .clone();
 
-        Ok(values)
+        Ok(value)
     }
 
-    async fn get_key_stats(&self) -> Result<KeyStats, Box<dyn std::error::Error>> {
+    async fn get_key_stats(&self, ticker: &str) -> Result<KeyStats, Box<dyn std::error::Error>> {
         let url = format!(
             "{}/{}/key-statistics?p={}",
-            self.url, self.ticker, self.ticker
+            self.url, ticker, ticker
         );
         let body = get(&url).await?.text().await?;
         let document = Document::from(StrTendril::from(body));
 
-        let cash = extract_field(&document, "Total Cash");
-        let mkt_cap = extract_field(&document, "Market Cap");
+        let total_cash = extract_field(&document, "Total Cash");
+        let market_cap = extract_field(&document, "Market Cap");
 
-        Ok(KeyStats::new(
-            Money::try_from(cash)?,
-            Money::try_from(mkt_cap)?,
-        ))
+        Ok(KeyStats {
+            total_cash: Money::try_from(total_cash)?,
+            market_cap: Money::try_from(market_cap)?,
+        })
     }
 }
 

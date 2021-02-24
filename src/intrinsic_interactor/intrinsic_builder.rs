@@ -1,5 +1,7 @@
-use crate::{financial::pv, growth_assumption::{GrowthAssumption, GrowthAssumptionBuilder}, money::Money};
+use crate::{financial::pv, money::Money};
 use core::f32;
+
+use super::growth_assumption::{GrowthAssumption, GrowthAssumptionBuilder};
 
 pub enum Multiplier {
     Outstanding,
