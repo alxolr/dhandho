@@ -17,6 +17,14 @@ impl Div<f32> for Money {
     }
 }
 
+impl Div<Money> for Money {
+    type Output = f32;
+
+    fn div(self, rhs: Money) -> Self::Output {
+        self.0 as f32 / rhs.0 as f32
+    }
+}
+
 impl Mul<f32> for Money {
     type Output = Self;
 
@@ -106,7 +114,8 @@ fn cleanup_letters(value: &mut String) {
 fn clean_up_after_zero(val: i64) -> i64 {
     let as_str = val.to_string();
     let length = as_str.len();
-    let first_zero = val.to_string().find("0").unwrap();
+    let first_zero = val.to_string().find("0").unwrap_or(3);
+
     let substr = &as_str[0..first_zero];
 
     format!("{}{}", substr, "0".repeat(length - substr.len()))
