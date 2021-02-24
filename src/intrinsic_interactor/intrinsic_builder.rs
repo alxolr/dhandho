@@ -69,7 +69,7 @@ impl IntrinsicBuilder {
         self
     }
 
-    pub fn compute(self) -> Money {
+    pub fn execute(self) -> Money {
         let mut result = Money(0);
         let mut fcf = self.fcf.unwrap();
         let rate = self.rate.unwrap();
@@ -129,6 +129,6 @@ mod tests {
                 GrowthAssumptionBuilder::new().add(GrowthAssumption(10, 0.05, None)),
             );
 
-        assert_eq!(intrisic.compute(), Money(231));
+        assert_eq!(intrisic.execute(), Money(231));
     }
 }

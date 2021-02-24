@@ -13,6 +13,8 @@ select = "0.5.0"
 tendril = "0.4.2"
 tokio = { version = "1", features = ["full"] }
 async-trait = "0"
+csv = "1.1"
+serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]
 mockall = "0.9"

@@ -5,30 +5,39 @@ mod money;
 mod stats_provider;
 mod test_mock_example;
 
-use stats_provider::yahoo::Yahoo;
 use intrinsic_interactor::IntrinsicInteractor;
-use std::env;
+use serde::Deserialize;
+use stats_provider::yahoo::Yahoo;
+use std::io;
+
+#[derive(Debug, Deserialize)]
+struct Record {
+    ticker: String,
+    name: String,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let ticker = env::args().collect::<Vec<String>>().pop().unwrap().clone();
+    // let ticker = env::args().collect::<Vec<String>>().pop().unwrap().clone();
     let provider = Yahoo::new();
+    let interactor = intrinsic_interactor::IntrinsicInteractor::new(Box::new(provider));
 
-    let stats = IntrinsicInteractor::new(ticker, Box::new(provider))
-        .execute()
-        .await?;
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_reader(io::stdin());
 
-    // .add_fcf(*fcf_first.unwrap())
-    //     .add_cash(stats.total_cash.clone())
-    //     .add_rate(0.15)
-    //     .add_growth_assumptions(
-    //         GrowthAssumptionBuilder::new()
-    //             .add(GrowthAssumption(5, growth_rate, None))
-    //             .add(GrowthAssumption(5, growth_rate, Some(-0.01))),
-    //     )
-    //     .compute();
+    let mut wtr = csv::Writer::from_writer(std::io::stdout());
 
-    println!("{:?}", stats);
+    for result in rdr.deserialize() {
+        let record: Record = result?;
+        let stats = interactor.execute(&record.ticker).await;
+        if stats.is_ok() {
+            wtr.serialize(stats?)?;
+        }
+        wtr.flush()?;
+    }
+
+    wtr.flush()?;
 
     Ok(())
 }

@@ -1,12 +1,13 @@
 use core::{f32, fmt};
 use std::ops::{Add, AddAssign, Div, Mul};
 use std::{convert::TryFrom, fmt::Display};
+use serde::Serialize;
 
 const THOUSAND: i64 = 1000;
 const MILION: i64 = 1000000;
 const BILION: i64 = 1000000000;
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Serialize)]
 pub struct Money(pub i64);
 
 impl Div<f32> for Money {
@@ -81,12 +82,12 @@ impl TryFrom<String> for Money {
 
         if value.contains(".") {
             let maybe_value = value.parse::<f32>();
-            let value = maybe_value.unwrap();
+            let value = maybe_value.unwrap_or(0.0);
             let result = clean_up_after_zero((value * multiplier as f32) as i64);
             Ok(Money(result))
         } else {
             let maybe_value = value.parse::<i64>();
-            Ok(Money(maybe_value.unwrap() * multiplier))
+            Ok(Money(maybe_value.unwrap_or(0) * multiplier))
         }
     }
 }
