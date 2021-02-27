@@ -1,7 +1,7 @@
 use core::{f32, fmt};
+use serde::Serialize;
 use std::ops::{Add, AddAssign, Div, Mul};
 use std::{convert::TryFrom, fmt::Display};
-use serde::Serialize;
 
 const THOUSAND: i64 = 1000;
 const MILION: i64 = 1000000;
@@ -81,14 +81,30 @@ impl TryFrom<String> for Money {
         cleanup_letters(&mut value);
 
         if value.contains(".") {
-            let maybe_value = value.parse::<f32>();
-            let value = maybe_value.unwrap_or(0.0);
-            let result = clean_up_after_zero((value * multiplier as f32) as i64);
-            Ok(Money(result))
+            Ok(handle_int_value(value, multiplier).unwrap())
         } else {
-            let maybe_value = value.parse::<i64>();
-            Ok(Money(maybe_value.unwrap_or(0) * multiplier))
+            Ok(handle_float_value(value, multiplier).unwrap())
         }
+    }
+}
+
+fn handle_float_value(value: String, multiplier: i64) -> Result<Money, Box<dyn std::error::Error>> {
+    let maybe_value = value.parse::<i64>();
+    if maybe_value.is_ok() {
+        Ok(Money(maybe_value.unwrap() * multiplier))
+    } else {
+        Ok(Money(0))
+    }
+}
+
+fn handle_int_value(value: String, multiplier: i64) -> Result<Money, Box<dyn std::error::Error>> {
+    let maybe_value = value.parse::<f32>();
+    if maybe_value.is_ok() {
+        let value = maybe_value.unwrap();
+        let result = clean_up_after_zero((value * multiplier as f32) as i64);
+        Ok(Money(result))
+    } else {
+        Ok(Money(0))
     }
 }
 
@@ -179,15 +195,9 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "ParseIntError")]
-    fn test_parse_broken_string_throws_error() {
-        Money::try_from("unparsable string".to_string()).unwrap();
-    }
-
-    #[test]
-    #[should_panic(expected = "ParseFloatError")]
-    fn test_parse_broken_string_with_dot_throws_error() {
-        Money::try_from("unparsable.string".to_string()).unwrap();
+    fn test_from_broken_string_should_return_0() {
+        let money = Money::try_from("N/A".to_string()).unwrap();
+        assert_eq!(money, Money(0));
     }
 
     #[test]
