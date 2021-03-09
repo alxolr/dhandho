@@ -1,11 +1,10 @@
 use async_trait::async_trait;
-
 use crate::utils::money::Money;
 
 #[derive(Debug)]
 pub struct Stats {
     pub growth_analysis: f32,
-    pub free_cash_flow: Money,
+    pub free_cashflow: Money,
     pub total_cash: Money,
     pub market_cap: Money,
 }

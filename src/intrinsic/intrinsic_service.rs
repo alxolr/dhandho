@@ -1,10 +1,9 @@
 use super::{growth_assumption_builder::{GrowthAssumption, GrowthAssumptionBuilder}, intrinsic_builder::IntrinsicBuilder};
 use crate::{
-    stats::repo::{Stats as ProviderStats, StatsRepo},
+    stats::repo::{StatsRepo},
     utils::money::Money,
 };
 use serde::Serialize;
-use tokio::join;
 
 #[derive(Debug, Serialize)]
 pub struct Intrinsic {
@@ -14,6 +13,7 @@ pub struct Intrinsic {
     growth_analysis: f32,
     market_cap: Money,
     intrinsic: Money,
+    ratio: f32,
 }
 
 pub struct IntrinsicService {
@@ -30,7 +30,7 @@ impl IntrinsicService {
 
         let intrinsic = IntrinsicBuilder::new()
             .add_cash(stats.total_cash.clone())
-            .add_fcf(stats.free_cash_flow.clone())
+            .add_fcf(stats.free_cashflow.clone())
             .add_growth_assumptions(
                 GrowthAssumptionBuilder::new()
                     .add(GrowthAssumption(5, stats.growth_analysis.clone(), None))
@@ -43,8 +43,9 @@ impl IntrinsicService {
             growth_analysis: stats.growth_analysis,
             market_cap: stats.market_cap,
             total_cash: stats.total_cash,
-            free_cash_flow: stats.free_cash_flow,
+            free_cash_flow: stats.free_cashflow,
             intrinsic,
+            ratio: (intrinsic / stats.market_cap - 1.0)
         })
     }
 }

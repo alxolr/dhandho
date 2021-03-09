@@ -1,9 +1,8 @@
 use super::repo::*;
 use serde::Deserialize;
-use serde::*;
-use std::{convert::TryInto, env};
+use std::env;
 
-use crate::utils::money::Money;
+use crate::utils::{growth_rate, money::Money};
 use async_trait::async_trait;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -29,9 +28,9 @@ impl StatsRepo for StatsRepoImpl {
 
         let client = Client::new();
 
-        let response = client
+        let analysis = client
             .get(&format!(
-                "https://{}/stock/v2/get-analysis?symbol={}&regions=US",
+                "https://{}/stock/v2/get-cash-flow?symbol={}&regions=US",
                 api_host_host, ticker
             ))
             .headers(headers)
@@ -40,31 +39,108 @@ impl StatsRepo for StatsRepoImpl {
             .json::<Analysis>()
             .await?;
 
-        println!("Analysis {:?}", response);
+        let first_cashflow = analysis
+            .cashflow_statement_history
+            .cashflow_statements
+            .first()
+            .unwrap();
+
+        let first_balance_sheet = analysis
+            .balance_sheet_history
+            .balance_sheet_statements
+            .first()
+            .unwrap();
 
         Ok(Stats {
-            free_cash_flow: Money(100),
-            growth_analysis: 0.15,
-            total_cash: Money(100),
-            market_cap: Money(100),
+            free_cashflow: Money(first_cashflow.free_cashflow()),
+            growth_analysis: compute_growth_rate(analysis.cashflow_statement_history),
+            total_cash: Money(first_balance_sheet.cash.raw),
+            market_cap: Money(analysis.price.market_cap.raw),
         })
     }
+}
+
+fn compute_growth_rate(cashflow_statement_history: CashflowStatementHistory) -> f32 {
+    let fcfs = cashflow_statement_history
+        .cashflow_statements
+        .iter()
+        .map(|cashflow| cashflow.free_cashflow().clone())
+        .map(|free_cashflow| Money(free_cashflow))
+        .collect::<Vec<_>>();
+
+        growth_rate::get_growth_rate(fcfs)
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Analysis {
     symbol: String,
-    financial_data: FinancialData,
+    cashflow_statement_history: CashflowStatementHistory,
+    balance_sheet_history: BalanceSheetHistory,
+    price: Price,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct FinancialData {
-    free_cashflow: FreeCashflow,
+struct CashflowStatementHistory {
+    cashflow_statements: Vec<CashflowStatement>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct BalanceSheetHistory {
+    balance_sheet_statements: Vec<BalanceSheetStatement>,
 }
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct FreeCashflow {
+struct CashflowStatement {
+    net_income: NetIncome,
+    depreciation: Depreciation,
+    capital_expenditures: CapitalExpenditures,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct BalanceSheetStatement {
+    cash: Cash,
+}
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct NetIncome {
     raw: i64,
+}
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Depreciation {
+    raw: i64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CapitalExpenditures {
+    raw: i64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Price {
+    market_cap: MarketCap,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct MarketCap {
+    raw: i64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Cash {
+    raw: i64,
+}
+
+impl CashflowStatement {
+    fn free_cashflow(&self) -> i64 {
+        self.net_income.raw + self.depreciation.raw + self.capital_expenditures.raw
+    }
 }
