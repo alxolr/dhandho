@@ -47,7 +47,7 @@ mod tests {
     #[test]
     fn test_growth_rate_scenarios() {
         let scenarios = vec![
-            (vec![Money(1200), Money(1100), Money(1000), Money(900)], 0.1),
+            (vec![Money(1200), Money(1100), Money(1000), Money(900)], 0.102),
         ];
 
         for scenario in scenarios {

@@ -1,29 +1,60 @@
-/**
- * Edge/odds = Fraction of your bankroll you should bet each time
- */
+use clap::Clap;
+#[derive(Clap, Debug)]
+#[clap(
+    about = "Formula used to maximaze the gains by providing different assumptions, in the form of (0.8,21.0)"
+)]
+pub struct Kelly {
+    #[clap(short, long, multiple = true, required = true)]
+    assumption: Vec<String>,
+}
+impl Kelly {
+    pub fn run(self) {
+        let mut kelly_builder = KellyAssumptionBuilder::new();
+
+        let assumptions = self
+            .assumption
+            .into_iter()
+            .map(|it| {
+                let numbers = it
+                    .split(",")
+                    .into_iter()
+                    .map(|nb| nb.parse::<f32>().unwrap())
+                    .collect::<Vec<_>>();
+
+                KellyAssumption(*numbers.first().unwrap(), *numbers.last().unwrap())
+            })
+            .collect::<Vec<_>>();
+
+        kelly_builder.assumptions = assumptions;
+
+        let result = kelly_builder.compute();
+
+        println!("{}", result);
+    }
+}
 
 #[derive(Debug, PartialEq, PartialOrd)]
-pub struct KellyAssumption(pub f32, pub f32);
+struct KellyAssumption(f32, f32);
 
 #[derive(Debug, PartialEq)]
-pub struct KellyAssumptionBuilder {
+struct KellyAssumptionBuilder {
     assumptions: Vec<KellyAssumption>,
 }
 
 impl KellyAssumptionBuilder {
-    pub fn new() -> Self {
+    fn new() -> Self {
         KellyAssumptionBuilder {
             assumptions: vec![],
         }
     }
 
-    pub fn add(mut self, assumption: KellyAssumption) -> KellyAssumptionBuilder {
+    fn add(mut self, assumption: KellyAssumption) -> KellyAssumptionBuilder {
         self.assumptions.push(assumption);
 
         self
     }
 
-    pub fn compute(self) -> f32 {
+    fn compute(self) -> f32 {
         let max_wagger = self
             .assumptions
             .iter()
