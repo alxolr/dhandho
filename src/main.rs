@@ -8,7 +8,7 @@ use dotenv::dotenv;
 use utils::kelly::Kelly;
 
 #[derive(Clap, Debug)]
-#[clap(version = "1.0", author = "Alexandru Olaru. <alxolr@gmail.com>")]
+#[clap(version = "1.0", author = "Alexandru Olaru. <alxolr@gmail.com>", rename_all="kebab-case")]
 enum Dhandho {
     Kelly(Kelly)
 }

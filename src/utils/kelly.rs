@@ -1,12 +1,13 @@
 use clap::Clap;
 #[derive(Clap, Debug)]
 #[clap(
-    about = "Formula used to maximaze the gains by providing different assumptions, in the form of (0.8,21.0)"
+    about = "Formula used to maximaze the gains by providing different assumptions. Ex: -a 0.8,21.0"
 )]
 pub struct Kelly {
     #[clap(short, long, multiple = true, required = true)]
     assumption: Vec<String>,
 }
+
 impl Kelly {
     pub fn run(self) {
         let mut kelly_builder = KellyAssumptionBuilder::new();
