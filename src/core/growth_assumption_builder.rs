@@ -1,7 +1,7 @@
 pub struct GrowthAssumption(pub u8, pub f32, pub Option<f32>);
 
 impl GrowthAssumption {
-    fn normalize(self) -> Vec<f32> {
+    pub fn normalize(self) -> Vec<f32> {
         let mut result = vec![];
         let GrowthAssumption(range, mut rate, maybe_incr) = self;
         let incr = maybe_incr.unwrap_or(0.0);
