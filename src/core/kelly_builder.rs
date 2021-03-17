@@ -1,61 +1,25 @@
-use clap::Clap;
-#[derive(Clap, Debug)]
-#[clap(
-    about = "Formula used to maximaze the gains by providing different assumptions. Ex: -a 0.8,21.0"
-)]
-pub struct Kelly {
-    #[clap(short, long, multiple = true, required = true)]
-    assumption: Vec<String>,
-}
-
-impl Kelly {
-    pub fn run(self) {
-        let mut kelly_builder = KellyAssumptionBuilder::new();
-
-        let assumptions = self
-            .assumption
-            .into_iter()
-            .map(|it| {
-                let numbers = it
-                    .split(",")
-                    .into_iter()
-                    .map(|nb| nb.parse::<f32>().unwrap())
-                    .collect::<Vec<_>>();
-
-                KellyAssumption(*numbers.first().unwrap(), *numbers.last().unwrap())
-            })
-            .collect::<Vec<_>>();
-
-        kelly_builder.assumptions = assumptions;
-
-        let result = kelly_builder.compute();
-
-        println!("{}", result);
-    }
-}
-
 #[derive(Debug, PartialEq, PartialOrd)]
-struct KellyAssumption(f32, f32);
+pub struct KellyAssumption(pub f32, pub f32);
 
 #[derive(Debug, PartialEq)]
-struct KellyAssumptionBuilder {
-    assumptions: Vec<KellyAssumption>,
+pub struct KellyAssumptionBuilder {
+    pub assumptions: Vec<KellyAssumption>,
 }
 
 impl KellyAssumptionBuilder {
-    fn new() -> Self {
+    pub fn new() -> Self {
         KellyAssumptionBuilder {
             assumptions: vec![],
         }
     }
 
-    fn add(mut self, assumption: KellyAssumption) -> KellyAssumptionBuilder {
+    pub fn add(mut self, assumption: KellyAssumption) -> KellyAssumptionBuilder {
         self.assumptions.push(assumption);
 
         self
     }
 
-    fn compute(self) -> f32 {
+    pub fn compute(self) -> f32 {
         let max_wagger = self
             .assumptions
             .iter()

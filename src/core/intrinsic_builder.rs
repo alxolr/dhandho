@@ -1,13 +1,6 @@
 use core::f32;
-
 use crate::utils::{financial::pv, money::Money};
-
 use super::growth_assumption_builder::{GrowthAssumption, GrowthAssumptionBuilder};
-
-pub enum Multiplier {
-    Outstanding,
-    Standard,
-}
 
 #[derive(PartialEq, Debug)]
 pub struct IntrinsicBuilder {
@@ -49,11 +42,8 @@ impl IntrinsicBuilder {
         self
     }
 
-    pub fn add_multiplier(mut self, multiplier: Multiplier) -> IntrinsicBuilder {
-        match multiplier {
-            Multiplier::Outstanding => self.multiplier = Some(15),
-            Multiplier::Standard => self.multiplier = Some(10),
-        }
+    pub fn add_multiplier(mut self, multiplier: u8) -> IntrinsicBuilder {
+        self.multiplier = Some(multiplier);
 
         self
     }
@@ -114,7 +104,7 @@ mod tests {
             .add_growth_assumptions(
                 GrowthAssumptionBuilder::new().add(GrowthAssumption(10, 0.05, None)),
             )
-            .add_multiplier(Multiplier::Standard);
+            .add_multiplier(10);
 
         assert_eq!(expected, builded);
     }
@@ -125,7 +115,7 @@ mod tests {
             .add_cash(Money(40))
             .add_fcf(Money(15))
             .add_rate(0.15)
-            .add_multiplier(Multiplier::Outstanding)
+            .add_multiplier(15)
             .add_growth_assumptions(
                 GrowthAssumptionBuilder::new().add(GrowthAssumption(10, 0.05, None)),
             );
