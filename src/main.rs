@@ -1,6 +1,5 @@
 mod cli;
 mod core;
-mod stats;
 mod utils;
 
 use clap::Clap;

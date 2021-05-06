@@ -1,12 +1,12 @@
-use core::f32;
-use crate::utils::{financial::pv, money::Money};
 use super::growth_assumption_builder::{GrowthAssumption, GrowthAssumptionBuilder};
+use crate::utils::financial::pv;
+use core::f32;
 
 #[derive(PartialEq, Debug)]
 pub struct IntrinsicBuilder {
-    cash: Option<Money>,
+    cash: Option<f32>,
     // free cash flow
-    fcf: Option<Money>,
+    fcf: Option<f32>,
     // expected rate of return for the investment
     rate: Option<f32>,
     // usually it's 10 or 15 for premium bussinesses
@@ -19,7 +19,7 @@ impl IntrinsicBuilder {
     pub fn new() -> IntrinsicBuilder {
         IntrinsicBuilder {
             fcf: None,
-            cash: Some(Money(0)),
+            cash: Some(0.0),
             rate: Some(0.15),     // default 15%
             multiplier: Some(10), // default 10x
             growth_assumptions: Some(
@@ -30,7 +30,7 @@ impl IntrinsicBuilder {
         }
     }
 
-    pub fn add_fcf(mut self, cash: Money) -> IntrinsicBuilder {
+    pub fn add_fcf(mut self, cash: f32) -> IntrinsicBuilder {
         self.fcf = Some(cash);
 
         self
@@ -54,14 +54,14 @@ impl IntrinsicBuilder {
         self
     }
 
-    pub fn add_cash(mut self, cash: Money) -> IntrinsicBuilder {
+    pub fn add_cash(mut self, cash: f32) -> IntrinsicBuilder {
         self.cash = Some(cash);
 
         self
     }
 
-    pub fn execute(self) -> Money {
-        let mut result = Money(0);
+    pub fn execute(self) -> f32 {
+        let mut result = 0.0;
         let mut fcf = self.fcf.unwrap();
         let rate = self.rate.unwrap();
         let growth_assumptions = self.growth_assumptions.unwrap().assumptions;
@@ -88,8 +88,8 @@ mod tests {
     #[test]
     fn test_intrisic_builder() {
         let expected = IntrinsicBuilder {
-            cash: Some(Money(10)),
-            fcf: Some(Money(15)),
+            cash: Some(10.0),
+            fcf: Some(15.0),
             rate: Some(0.15),
             multiplier: Some(10),
             growth_assumptions: Some(
@@ -98,8 +98,8 @@ mod tests {
         };
 
         let builded = IntrinsicBuilder::new()
-            .add_fcf(Money(15))
-            .add_cash(Money(10))
+            .add_fcf(15.0)
+            .add_cash(10.0)
             .add_rate(0.15)
             .add_growth_assumptions(
                 GrowthAssumptionBuilder::new().add(GrowthAssumption(10, 0.05, None)),
@@ -112,14 +112,14 @@ mod tests {
     #[test]
     fn test_compute_on_simple_example() {
         let intrisic = IntrinsicBuilder::new()
-            .add_cash(Money(40))
-            .add_fcf(Money(15))
+            .add_cash(40.0)
+            .add_fcf(15.0)
             .add_rate(0.15)
             .add_multiplier(15)
             .add_growth_assumptions(
                 GrowthAssumptionBuilder::new().add(GrowthAssumption(10, 0.05, None)),
             );
 
-        assert_eq!(intrisic.execute(), Money(231));
+        assert_eq!(intrisic.execute(), 224.67798);
     }
 }

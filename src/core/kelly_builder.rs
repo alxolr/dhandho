@@ -13,8 +13,8 @@ impl KellyAssumptionBuilder {
         }
     }
 
-    pub fn add(mut self, assumption: KellyAssumption) -> KellyAssumptionBuilder {
-        self.assumptions.push(assumption);
+    pub fn set(mut self, assumptions: Vec<KellyAssumption>) -> KellyAssumptionBuilder {
+        self.assumptions = assumptions;
 
         self
     }
@@ -51,20 +51,23 @@ mod tests {
         };
 
         assert_eq!(
-            KellyAssumptionBuilder::new()
-                .add(KellyAssumption(0.8, 21.0))
-                .add(KellyAssumption(0.1, 7.5))
-                .add(KellyAssumption(0.1, -1.0)),
+            KellyAssumptionBuilder::new().set(vec![
+                KellyAssumption(0.8, 21.0),
+                KellyAssumption(0.1, 7.5),
+                KellyAssumption(0.1, -1.0),
+            ]),
             expected
         );
     }
 
     #[test]
     fn test_should_return_the_number_for_the_allocation() {
-        let kelly = KellyAssumptionBuilder::new()
-            .add(KellyAssumption(0.8, 21.0))
-            .add(KellyAssumption(0.1, 7.5))
-            .add(KellyAssumption(0.1, -1.0));
+        let assumptions = vec![
+            KellyAssumption(0.8, 21.0),
+            KellyAssumption(0.1, 7.5),
+            KellyAssumption(0.1, -1.0),
+        ];
+        let kelly = KellyAssumptionBuilder::new().set(assumptions);
 
         assert_eq!(kelly.compute(), 0.8309524);
     }
