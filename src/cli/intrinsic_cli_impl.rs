@@ -1,21 +1,22 @@
-use clap::Clap;
-
 use super::port::Run;
 use crate::core::growth_assumption_builder::{GrowthAssumption, GrowthAssumptionBuilder};
 use crate::core::intrinsic_builder::IntrinsicBuilder;
+use structopt::StructOpt;
 
-#[derive(Clap, Debug)]
-#[clap(about = "Computes the intrinsic value of an asset by providing the different parameters")]
+#[derive(StructOpt, Debug)]
+#[structopt(
+    about = "Computes the intrinsic value of an asset by providing the different parameters"
+)]
 pub struct IntrinsicCliImpl {
-    #[clap(short, long, default_value = "0")]
+    #[structopt(short, long, default_value = "0")]
     cash: String,
-    #[clap(short, long, required = true)]
+    #[structopt(short, long, required = true)]
     free_cashflow: String,
-    #[clap(short, long, default_value = "0.15")]
+    #[structopt(short, long, default_value = "0.15")]
     rate: String,
-    #[clap(short, long, default_value = "10")]
+    #[structopt(short, long, default_value = "10")]
     multiplier: String,
-    #[clap(short, long, multiple = true, required = true)]
+    #[structopt(short, long, multiple = true, required = true)]
     growth_assumptions: Vec<String>,
 }
 

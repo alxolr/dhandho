@@ -1,19 +1,10 @@
 [package]
-name = "dhandho"
-version = "0.1.0"
 authors = ["Alexandru Olaru <alxolr@gmail.com>"]
 edition = "2018"
+name = "dhandho"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dotenv = "0.15.0"
-reqwest = { version = "0.11", features = ["json"] }
-tokio = { version = "1", features = ["full"] }
-async-trait = "0"
-csv = "1.1"
-serde = { version = "1.0", features = ["derive"] }
-clap = "3.0.0-beta.2"
-
-[dev-dependencies]
-mockall = "0.9"
+structopt = "0"

@@ -1,11 +1,11 @@
-use clap::Clap;
+use structopt::StructOpt;
 
 use super::port::Run;
 use crate::core::kelly_builder::{KellyAssumption, KellyAssumptionBuilder};
-#[derive(Clap, Debug)]
-#[clap(about = "Maximaze the gains by providing different assumptions. Ex: -a 0.8,21.0")]
+#[derive(StructOpt, Debug)]
+#[structopt(about = "Maximaze the gains by providing different assumptions. Ex: -a 0.8,21.0")]
 pub struct KellyCliImpl {
-    #[clap(short, long, multiple = true, required = true)]
+    #[structopt(short, long, multiple = true, required = true)]
     assumption: Vec<String>,
 }
 
