@@ -4,9 +4,7 @@ use core::f32;
 
 #[derive(PartialEq, Debug)]
 pub struct IntrinsicBuilder {
-    cash: Option<f32>,
-    // free cash flow
-    fcf: Option<f32>,
+    current_value: Option<f32>,
     // expected rate of return for the investment
     rate: Option<f32>,
     // usually it's 10 or 15 for premium bussinesses
@@ -18,10 +16,9 @@ pub struct IntrinsicBuilder {
 impl IntrinsicBuilder {
     pub fn new() -> IntrinsicBuilder {
         IntrinsicBuilder {
-            fcf: None,
-            cash: Some(0.0),
+            current_value: None,
             rate: Some(0.15),     // default 15%
-            multiplier: Some(10), // default 10x
+            multiplier: Some(15), // default 10x
             growth_assumptions: Some(
                 GrowthAssumptionBuilder::new()
                     .add(GrowthAssumption(5, 0.05, None))
@@ -30,8 +27,8 @@ impl IntrinsicBuilder {
         }
     }
 
-    pub fn add_fcf(mut self, cash: f32) -> IntrinsicBuilder {
-        self.fcf = Some(cash);
+    pub fn add_current_value(mut self, current_value: f32) -> IntrinsicBuilder {
+        self.current_value = Some(current_value);
 
         self
     }
@@ -54,15 +51,9 @@ impl IntrinsicBuilder {
         self
     }
 
-    pub fn add_cash(mut self, cash: f32) -> IntrinsicBuilder {
-        self.cash = Some(cash);
-
-        self
-    }
-
     pub fn execute(self) -> f32 {
         let mut result = 0.0;
-        let mut fcf = self.fcf.unwrap();
+        let mut current_value = self.current_value.unwrap();
         let rate = self.rate.unwrap();
         let growth_assumptions = self.growth_assumptions.unwrap().assumptions;
 
@@ -70,12 +61,12 @@ impl IntrinsicBuilder {
 
         for assumption_rate in growth_assumptions.iter() {
             year += 1;
-            fcf = fcf * (1. + assumption_rate);
-            result += pv(rate, year, fcf);
+            current_value = current_value * (1. + assumption_rate);
+            result += pv(rate, year, current_value);
         }
 
-        let sale_price = pv(rate, year, fcf * self.multiplier.unwrap() as f32);
-        result += sale_price + self.cash.unwrap();
+        let sale_price = pv(rate, year, current_value * self.multiplier.unwrap() as f32);
+        result += sale_price;
 
         result
     }
@@ -88,8 +79,7 @@ mod tests {
     #[test]
     fn test_intrisic_builder() {
         let expected = IntrinsicBuilder {
-            cash: Some(10.0),
-            fcf: Some(15.0),
+            current_value: Some(15.0),
             rate: Some(0.15),
             multiplier: Some(10),
             growth_assumptions: Some(
@@ -98,8 +88,7 @@ mod tests {
         };
 
         let builded = IntrinsicBuilder::new()
-            .add_fcf(15.0)
-            .add_cash(10.0)
+            .add_current_value(15.0)
             .add_rate(0.15)
             .add_growth_assumptions(
                 GrowthAssumptionBuilder::new().add(GrowthAssumption(10, 0.05, None)),
@@ -112,14 +101,13 @@ mod tests {
     #[test]
     fn test_compute_on_simple_example() {
         let intrisic = IntrinsicBuilder::new()
-            .add_cash(40.0)
-            .add_fcf(15.0)
+            .add_current_value(15.0)
             .add_rate(0.15)
             .add_multiplier(15)
             .add_growth_assumptions(
                 GrowthAssumptionBuilder::new().add(GrowthAssumption(10, 0.05, None)),
             );
 
-        assert_eq!(intrisic.execute(), 224.67798);
+        assert_eq!(intrisic.execute(), 184.67798);
     }
 }

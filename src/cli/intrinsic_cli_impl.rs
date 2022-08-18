@@ -8,14 +8,12 @@ use structopt::StructOpt;
     about = "Computes the intrinsic value of an asset by providing the different parameters"
 )]
 pub struct IntrinsicCliImpl {
-    #[structopt(short, long, default_value = "0")]
-    cash: String,
     #[structopt(short, long, required = true)]
-    free_cashflow: String,
+    current_value: f32,
     #[structopt(short, long, default_value = "0.15")]
-    rate: String,
-    #[structopt(short, long, default_value = "10")]
-    multiplier: String,
+    rate: f32,
+    #[structopt(short, long, default_value = "15")]
+    multiplier: u8,
     #[structopt(short, long, multiple = true, required = true)]
     growth_assumptions: Vec<String>,
 }
@@ -41,11 +39,10 @@ impl Run for IntrinsicCliImpl {
         gab.assumptions = assumptions;
 
         let result = IntrinsicBuilder::new()
-            .add_cash(self.cash.parse::<f32>().unwrap())
-            .add_fcf(self.free_cashflow.parse::<f32>().unwrap())
+            .add_current_value(self.current_value)
             .add_growth_assumptions(gab)
-            .add_rate(self.rate.parse::<f32>().unwrap_or(0.15))
-            .add_multiplier(self.multiplier.parse::<u8>().unwrap_or(10))
+            .add_rate(self.rate)
+            .add_multiplier(self.multiplier)
             .execute();
 
         println!("{}", result);
