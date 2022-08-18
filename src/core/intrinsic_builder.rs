@@ -54,19 +54,47 @@ impl IntrinsicBuilder {
     pub fn execute(self) -> f32 {
         let mut result = 0.0;
         let mut current_value = self.current_value.unwrap();
+        let multiple = self.multiplier.unwrap_or(15);
         let rate = self.rate.unwrap();
         let growth_assumptions = self.growth_assumptions.unwrap().assumptions;
 
+        println!(
+            "\nRate: {},\nTerminal Multiple: {},\nGrowth assumptions: {:?}",
+            rate, multiple, growth_assumptions
+        );
+
+        println!("\n{0: <4} | {1: <10} | {2: <10}", "year", "fv", "pv");
+        println!("{}", "-".repeat(30));
+
         let mut year = 0;
+        println!("{0: <4} | {1: <10} | {2: <10}", year, 0, current_value);
 
         for assumption_rate in growth_assumptions.iter() {
             year += 1;
             current_value = current_value * (1. + assumption_rate);
-            result += pv(rate, year, current_value);
+            let pv = pv(rate, year, current_value);
+
+            println!("{0: <4} | {1: <10} | {2: <10}", year, current_value, pv);
+            result += pv;
         }
 
-        let sale_price = pv(rate, year, current_value * self.multiplier.unwrap() as f32);
+
+        let termial_value = current_value * self.multiplier.unwrap() as f32;
+        let sale_price = pv(rate, year, termial_value);
+
+        println!(
+            "{0: <4} | {1: <10} | {2: <10}",
+            "TV", termial_value, sale_price
+        );
+
+        println!("{}", "-".repeat(30));
         result += sale_price;
+
+        println!(
+            "{0: <17} | {1: <10}\n",
+            "NPV", result
+        );
+
 
         result
     }

@@ -38,13 +38,11 @@ impl Run for IntrinsicCliImpl {
 
         gab.assumptions = assumptions;
 
-        let result = IntrinsicBuilder::new()
+        IntrinsicBuilder::new()
             .add_current_value(self.current_value)
             .add_growth_assumptions(gab)
             .add_rate(self.rate)
             .add_multiplier(self.multiplier)
             .execute();
-
-        println!("{}", result);
     }
 }
