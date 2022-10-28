@@ -10,7 +10,7 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(
-    version = "1.0",
+    version = "0.1.0",
     author = "Alexandru Olaru. <alxolr@gmail.com>",
     rename_all = "kebab-case"
 )]

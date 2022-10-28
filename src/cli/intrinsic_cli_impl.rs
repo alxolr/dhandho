@@ -5,7 +5,7 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(
-    about = "Computes the intrinsic value of an asset by providing the different parameters"
+    about = "Computes the intrinsic value of an asset by providing different parameters"
 )]
 pub struct IntrinsicCliImpl {
     #[structopt(short, long, required = true)]
