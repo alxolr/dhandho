@@ -37,12 +37,15 @@ SUBCOMMANDS:
 
 ###### Problem
 
-> You bought a Pokemn Trading card in 2012 at a price of 100\$. In 2022 your card is listed on ebay at a price of 350$.
+You bought a Pokemn Trading card in 2012 at a price of 100\$. In 2022 your card is listed on ebay at a price of 350$.
 Calculate the compounded anual growth rate.
 
 ###### Solution
 
-Let's find out our input variables for this problem. We have the **final value** = 350.0\$ our **initial value** = 100.0\$, and the **investment period** of 10 years (2022 - 2012);
+Let's find out our input variables for this problem. We have the 
+_final value_ = 350.0\$
+_initial value_ = 100.0\$
+_investment period_ = 10 years (2022 - 2012);
 
 
 ```bash
