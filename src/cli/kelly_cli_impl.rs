@@ -1,7 +1,7 @@
 use structopt::StructOpt;
 
 use super::port::Run;
-use crate::core::kelly_builder::{KellyAssumption, KellyAssumptionBuilder};
+use crate::core::kelly_builder::{self, KellyAssumption, KellyAssumptionBuilder};
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Maximaze the gains by providing different assumptions. Ex: -a 0.8,21.0")]
 pub struct KellyCliImpl {
@@ -28,13 +28,25 @@ impl Run for KellyCliImpl {
             })
             .collect::<Vec<_>>();
 
-        let result = KellyAssumptionBuilder::new().set(assumptions).compute();
+        let kelly_builder = KellyAssumptionBuilder::new().set(assumptions);
+        let edge = kelly_builder.get_edge();
+        let result = kelly_builder.compute();
 
         if self.bankroll.is_some() {
             let bankroll = self.bankroll.unwrap();
-            println!("Bankroll: {}", bankroll);
+
+            if edge > 0.0 {
+                println!("Bankroll: {}", bankroll);
+                println!("Kelly: {}", result);
+                println!("Amount to wagger: {}", result * bankroll);
+                println!("Expected Value: {}", edge * (bankroll * result));
+            } else {
+                println!("Negative expected value. Don't wagger.")
+            }
+        } else {
+            println!("Edge: {}", edge);
             println!("Kelly: {}", result);
-            println!("Amount to wagger: {}", result * bankroll);
+            println!("Expected Value per unit: {}", edge);
         }
     }
 }

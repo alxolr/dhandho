@@ -19,6 +19,14 @@ impl KellyAssumptionBuilder {
         self
     }
 
+    pub fn get_edge(&self) -> f32 {
+        self.assumptions.iter().fold(0.0, |mut acc, it| {
+            acc = acc + it.0 * it.1;
+
+            acc
+        })
+    }
+
     pub fn compute(self) -> f32 {
         let max_wagger = self
             .assumptions
@@ -26,11 +34,7 @@ impl KellyAssumptionBuilder {
             .max_by(|x, y| x.1.partial_cmp(&y.1).unwrap())
             .unwrap_or(self.assumptions.first().unwrap());
 
-        let edge = self.assumptions.iter().fold(0.0, |mut acc, it| {
-            acc = acc + it.0 * it.1;
-
-            acc
-        });
+        let edge = self.get_edge();
 
         edge / max_wagger.1
     }
