@@ -7,6 +7,9 @@ use crate::core::kelly_builder::{KellyAssumption, KellyAssumptionBuilder};
 pub struct KellyCliImpl {
     #[structopt(short, long, multiple = true, required = true)]
     assumption: Vec<String>,
+
+    #[structopt(short, long)]
+    bankroll: Option<f32>,
 }
 
 impl Run for KellyCliImpl {
@@ -27,6 +30,11 @@ impl Run for KellyCliImpl {
 
         let result = KellyAssumptionBuilder::new().set(assumptions).compute();
 
-        println!("{}", result);
+        if self.bankroll.is_some() {
+            let bankroll = self.bankroll.unwrap();
+            println!("Bankroll: {}", bankroll);
+            println!("Kelly: {}", result);
+            println!("Amount to wagger: {}", result * bankroll);
+        }
     }
 }

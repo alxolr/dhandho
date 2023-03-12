@@ -14,7 +14,7 @@ cargo install dhandho
 ```bash
 dhandho help
 
-dhandho 0.1.0
+dhandho 0.2.0
 Alexandru Olaru. <alxolr@gmail.com>
 
 USAGE:
@@ -93,11 +93,16 @@ Let's say you have a 55% chance of winning 2x your investment and a 45% chance o
 The formula will help you calculate the optimal bet size.
 
 ```bash
-dhandho kelly -a 0.55,2.0 -a 0.45,-1.0
-0.32500002
+dhandho kelly -a 0.55,2.0 -a 0.45,-1.0 -b 25000
+
+Bankroll: 25000
+Kelly: 0.32500002
+Amount to wagger: 8125.0005
 ```
 
 The optimal bet size is 32.5% of your investment.
+If you have a bankroll of 25000\$, you should bet 8125\$.
+
 
 
 

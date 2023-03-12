@@ -10,7 +10,7 @@ keywords = ["cli", "finance", "cagr", "intrinsic-calculator", "kelly-formula"]
 license = "MIT OR Apache-2.0"
 name = "dhandho"
 repository = "https://github.com/alxolr/dhandho"
-version = "0.1.0"
+version = "0.2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
