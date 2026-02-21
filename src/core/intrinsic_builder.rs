@@ -1,6 +1,6 @@
 use super::growth_assumption_builder::{GrowthAssumption, GrowthAssumptionBuilder};
 use crate::utils::financial::pv;
-use comfy_table::{presets::UTF8_FULL, Cell, Table, ColumnConstraint, Width};
+use comfy_table::{presets, Cell, ColumnConstraint, Table, Width};
 use core::f32;
 
 #[derive(PartialEq, Debug)]
@@ -88,8 +88,12 @@ impl IntrinsicBuilder {
 
         // Table 1: ASSUMPTIONS
         let mut assumptions_table = Table::new();
-        assumptions_table.load_preset(UTF8_FULL);
-        assumptions_table.set_header(vec!["Assumptions", ""]);
+        assumptions_table.load_preset(presets::UTF8_BORDERS_ONLY);
+        assumptions_table.set_header(vec!["Assumptions", "Value"]);
+        assumptions_table.set_constraints(vec![
+            ColumnConstraint::Absolute(Width::Fixed(16)),
+            ColumnConstraint::Absolute(Width::Fixed(16)),
+        ]);
 
         assumptions_table.add_row(vec![
             Cell::new("Initial Value (FCF)"),
@@ -141,8 +145,13 @@ impl IntrinsicBuilder {
 
         // Table 2: CASH FLOW PROJECTIONS
         let mut cashflow_table = Table::new();
-        cashflow_table.load_preset(UTF8_FULL);
+        cashflow_table.load_preset(presets::UTF8_BORDERS_ONLY);
         cashflow_table.set_header(vec!["Year", "FV", "PV"]);
+        cashflow_table.set_constraints(vec![
+            ColumnConstraint::Absolute(Width::Fixed(10)),
+            ColumnConstraint::Absolute(Width::Fixed(10)),
+            ColumnConstraint::Absolute(Width::Fixed(10)),
+        ]);
 
         let mut year = 0;
         cashflow_table.add_row(vec![
@@ -184,11 +193,15 @@ impl IntrinsicBuilder {
 
         // Table 3: ADJUSTMENTS
         let mut adjustments_table = Table::new();
-        adjustments_table.load_preset(UTF8_FULL);
-        adjustments_table.set_header(vec!["Adjustments", ""]);
+        adjustments_table.load_preset(presets::UTF8_BORDERS_ONLY);
+        adjustments_table.set_header(vec!["Adjustments", "Value"]);
+        adjustments_table.set_constraints(vec![
+            ColumnConstraint::Absolute(Width::Fixed(16)),
+            ColumnConstraint::Absolute(Width::Fixed(16)),
+        ]);
 
         adjustments_table.add_row(vec![
-            Cell::new("PV of valuation"),
+            Cell::new("NPV"),
             Cell::new(format!("${:.2}", result)),
         ]);
 
@@ -218,7 +231,7 @@ impl IntrinsicBuilder {
         }
 
         adjustments_table.add_row(vec![
-            Cell::new("= Intrinsic Value"),
+            Cell::new("= Intrinsic"),
             Cell::new(format!("${:.2}", result)),
         ]);
 
@@ -226,33 +239,45 @@ impl IntrinsicBuilder {
             let value_per_share = result / shares as f32;
             adjustments_table.add_row(vec![Cell::new("")]);
             adjustments_table.add_row(vec![
-                Cell::new("÷ Shares Outstanding"),
+                Cell::new("÷ Shares"),
                 Cell::new(format!("{}", shares)),
             ]);
             adjustments_table.add_row(vec![
-                Cell::new("= Value per Share"),
+                Cell::new("= per Share"),
                 Cell::new(format!("${:.2}", value_per_share)),
             ]);
         }
 
-        // Create a main table with one row and three equal-sized cells
-        let mut main_table = Table::new();
-        main_table.load_preset(UTF8_FULL);
-        
-        // Set equal width for all three columns
-        main_table.set_constraints(vec![
-            ColumnConstraint::Absolute(Width::Fixed(45)),
-            ColumnConstraint::Absolute(Width::Fixed(45)),
-            ColumnConstraint::Absolute(Width::Fixed(45)),
-        ]);
-        
-        main_table.add_row(vec![
-            Cell::new(assumptions_table.to_string()),
-            Cell::new(cashflow_table.to_string()),
-            Cell::new(adjustments_table.to_string()),
-        ]);
+        // Print the three tables side by side
+        let assumptions_str = assumptions_table.to_string();
+        let cashflow_str = cashflow_table.to_string();
+        let adjustments_str = adjustments_table.to_string();
 
-        println!("\n{}\n", main_table);
+        let assumptions_lines: Vec<&str> = assumptions_str.lines().collect();
+        let cashflow_lines: Vec<&str> = cashflow_str.lines().collect();
+        let adjustments_lines: Vec<&str> = adjustments_str.lines().collect();
+
+        let max_lines = assumptions_lines
+            .len()
+            .max(cashflow_lines.len())
+            .max(adjustments_lines.len());
+
+        println!();
+        for i in 0..max_lines {
+            let assumptions_line = assumptions_lines.get(i).unwrap_or(&"");
+            let cashflow_line = cashflow_lines.get(i).unwrap_or(&"");
+            let adjustments_line = adjustments_lines.get(i).unwrap_or(&"");
+
+            // Each table is ~36 chars wide, pad for alignment
+            let padded_assumptions = format!("{:36}", assumptions_line);
+            let padded_cashflow = format!("{:36}", cashflow_line);
+
+            println!(
+                "{}  {}  {}",
+                padded_assumptions, padded_cashflow, adjustments_line
+            );
+        }
+        println!();
 
         result
     }
