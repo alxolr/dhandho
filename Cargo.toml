@@ -1,7 +1,7 @@
 [package]
 authors = ["Alexandru Olaru <alxolr@gmail.com>"]
 description = "It's a cli tool build in rust, that helps calculate intrinsic value of an investment."
-edition = "2018"
+edition = "2021"
 include = [
   "**/*.rs",
   "Cargo.toml",
@@ -10,9 +10,9 @@ keywords = ["cli", "finance", "cagr", "intrinsic-calculator", "kelly-formula"]
 license = "MIT OR Apache-2.0"
 name = "dhandho"
 repository = "https://github.com/alxolr/dhandho"
-version = "0.2.1"
+version = "0.3.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-structopt = "0"
+clap = { version = "4.5.60", features = ["derive"] }

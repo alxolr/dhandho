@@ -14,7 +14,7 @@ cargo install dhandho
 ```bash
 dhandho help
 
-dhandho 0.2.0
+dhandho 0.3.0
 Alexandru Olaru. <alxolr@gmail.com>
 
 USAGE:
@@ -59,10 +59,10 @@ The anual compounded growth rate for the investment is **13.34%**.
 
 Intrinsic value is the value of an asset based on the cash flows it generates.
 
-We have a company which has a market cap of 1000\$. The company has a cashflow growth rate of 10%. We will use a discount rate of 10% and a terminal multiple of 10x.
+We have a company which has a market cap of 1000\$. The company has a cashflow growth rate of 10%. We will use a discount rate of 10%.
 
 ```bash
-dhandho intrinsic -c 100 -g 10,0.10 -r 0.10 -m 10
+dhandho intrinsic -c 100 -g 10,0.10 -r 0.10
 
 year | fv         | pv        
 ------------------------------

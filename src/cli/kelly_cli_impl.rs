@@ -1,14 +1,14 @@
-use structopt::StructOpt;
+use clap::Parser;
 
 use super::port::Run;
-use crate::core::kelly_builder::{self, KellyAssumption, KellyAssumptionBuilder};
-#[derive(StructOpt, Debug)]
-#[structopt(about = "Maximaze the gains by providing different assumptions. Ex: -a 0.8,21.0")]
+use crate::core::kelly_builder::{KellyAssumption, KellyAssumptionBuilder};
+#[derive(Parser, Debug)]
+#[command(about = "Maximaze the gains by providing different assumptions. Ex: -a 0.8,21.0")]
 pub struct KellyCliImpl {
-    #[structopt(short, long, multiple = true, required = true)]
+    #[arg(short, long, required = true, help = "Assumptions in the format rate,amount")]
     assumption: Vec<String>,
 
-    #[structopt(short, long)]
+    #[arg(short, long, help = "Optional bankroll amount")]
     bankroll: Option<f32>,
 }
 

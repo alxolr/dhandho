@@ -1,11 +1,10 @@
-use structopt::StructOpt;
-
 use crate::utils::financial::cagr;
+use clap::Parser;
 
 use super::port::Run;
 
-#[derive(StructOpt, Debug)]
-#[structopt(about = "Calculated the compounded anual growth rate")]
+#[derive(Parser, Debug)]
+#[clap(about = "Calculated the compounded anual growth rate")]
 pub struct CagrCliImpl {
     final_value: f32,
     initial_value: f32,

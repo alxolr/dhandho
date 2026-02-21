@@ -15,7 +15,7 @@ impl GrowthAssumption {
         result
     }
 }
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct GrowthAssumptionBuilder {
     pub assumptions: Vec<f32>,
 }
