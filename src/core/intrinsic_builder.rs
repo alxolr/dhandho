@@ -17,7 +17,7 @@ pub struct IntrinsicBuilder {
     // optional probability of failure
     probability_of_failure: Option<f32>,
     // optional shares outstanding
-    shares_outstanding: Option<u32>,
+    shares_outstanding: Option<f32>,
 }
 
 impl IntrinsicBuilder {
@@ -74,7 +74,7 @@ impl IntrinsicBuilder {
         self
     }
 
-    pub fn add_shares_outstanding(mut self, shares_outstanding: Option<u32>) -> IntrinsicBuilder {
+    pub fn add_shares_outstanding(mut self, shares_outstanding: Option<f32>) -> IntrinsicBuilder {
         self.shares_outstanding = shares_outstanding;
 
         self
@@ -139,7 +139,7 @@ impl IntrinsicBuilder {
         if let Some(shares) = self.shares_outstanding {
             assumptions_table.add_row(vec![
                 Cell::new("Shares Outstanding"),
-                Cell::new(format!("{}", shares)),
+                Cell::new(format!("{:.1}", shares)),
             ]);
         }
 
@@ -236,11 +236,11 @@ impl IntrinsicBuilder {
         ]);
 
         if let Some(shares) = self.shares_outstanding {
-            let value_per_share = result / shares as f32;
+            let value_per_share = result / shares;
             adjustments_table.add_row(vec![Cell::new("")]);
             adjustments_table.add_row(vec![
                 Cell::new("÷ Shares"),
-                Cell::new(format!("{}", shares)),
+                Cell::new(format!("{:.1}", shares)),
             ]);
             adjustments_table.add_row(vec![
                 Cell::new("= per Share"),

@@ -28,7 +28,7 @@ pub struct IntrinsicCliImpl {
     #[arg(short, long, help = "Optional probability of failure")]
     probability_of_failure: Option<f32>,
     #[arg(short, long, help = "Optional shares outstanding")]
-    shares_outstanding: Option<u32>,
+    shares_outstanding: Option<f32>,
 }
 
 impl Run for IntrinsicCliImpl {

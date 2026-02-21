@@ -59,31 +59,51 @@ The anual compounded growth rate for the investment is **13.34%**.
 
 Intrinsic value is the value of an asset based on the cash flows it generates.
 
-We have a company which has a market cap of 1000\$. The company has a cashflow growth rate of 10%. We will use a discount rate of 10%.
+Let's value Coca-Cola with more sophisticated assumptions (all values in billions):
+- Current Free Cash Flow: $9.8B
+- Growth Rates (varying by period):
+  - Years 1-3: 5% growth (near-term strong growth)
+  - Years 4-7: 3% growth (moderate growth phase)
+  - Years 8-10: 2% growth (mature/stable growth)
+- Discount Rate: 12% (weighted average cost of capital)
+- Cash: $15.8B
+- Debt: $45.9B
+- Shares Outstanding: 4.3B shares
 
 ```bash
-dhandho intrinsic -c 100 -g 10,0.10 -r 0.10
+dhandho intrinsic -f 9.8 -g 3,0.05,0.0 -g 4,0.03,0.0 -g 3,0.02,0.0 -c 15.8 -d 45.9 -s 4.3 -r 0.12
 
-year | fv         | pv        
-------------------------------
-0    | 0          | 100       
-1    | 110        | 100       
-2    | 121        | 100       
-3    | 133.1      | 100       
-4    | 146.41     | 99.99999  
-5    | 161.05101  | 100       
-6    | 177.15611  | 100       
-7    | 194.87173  | 100       
-8    | 214.35892  | 99.99999  
-9    | 235.79482  | 99.99999  
-10   | 259.3743   | 99.99999  
-TV   | 2593.743   | 999.99994 
-------------------------------
-NPV               | 2000     
-
+┌─────────────────────────────────┐   ┌────────────────────────────────┐    ┌─────────────────────────────────┐
+│ Assumptions      Value          │   │ Year       FV         PV       │    │ Adjustments      Value          │
+╞═════════════════════════════════╡   ╞════════════════════════════════╡    ╞═════════════════════════════════╡
+│ Initial Value    $9.80          │   │ 0          0.00       9.80     │    │ NPV              $110.23        │
+│ (FCF)                           │   │ 1          10.29      9.19     │    │ - Debt           $45.90         │
+│ Discount Rate    12.0%          │   │ 2          10.80      8.61     │    │ + Cash           $15.80         │
+│ Growth           Year 1: 5.0%   │   │ 3          11.34      8.07     │    │ = Intrinsic      $80.13         │
+│ Assumptions      Year 2: 5.0%   │   │ 4          11.69      7.43     │    │                                 │
+│                  Year 3: 5.0%   │   │ 5          12.04      6.83     │    │ ÷ Shares         4.3            │
+│                  Year 4: 3.0%   │   │ 6          12.40      6.28     │    │ = per Share      $18.63         │
+│                  Year 5: 3.0%   │   │ 7          12.77      5.78     │    └─────────────────────────────────┘
+│                  Year 6: 3.0%   │   │ 8          13.02      5.26     │    
+│                  Year 7: 3.0%   │   │ 9          13.28      4.79     │    
+│                  Year 8: 2.0%   │   │ 10         13.55      4.36     │    
+│                  Year 9: 2.0%   │   │ TV         135.50     43.63    │    
+│                  Year 10: 2.0%  │   │ NPV                   $110.23  │    
+│ Cash             $15.80         │   └────────────────────────────────┘    
+│ Debt             $45.90         │                                         
+│ Shares           4.3            │                                         
+│ Outstanding                     │                                         
+└─────────────────────────────────┘
 ```
 
-As we can see for the given requirements we have an intrinsic value of 2000\$. The company is undervalued.
+The intrinsic value per share is **$18.63**. This calculation demonstrates:
+1. **Varying growth assumptions**: Higher growth in near-term (5%), tapering to mature growth (2%)
+2. **Realistic discount rate**: 12% WACC for a large-cap company
+3. Net Present Value (NPV) of future cash flows: $110.23B
+4. After adjustments (debt/cash): $80.13B
+5. **Intrinsic value per share: $18.63**
+
+Note: All values can be expressed in billions for simplicity (e.g., 9.8, 15.8, 4.3).
 
 #### dhandho kelly
 
