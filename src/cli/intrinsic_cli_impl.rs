@@ -27,6 +27,8 @@ pub struct IntrinsicCliImpl {
     debt: Option<f32>,
     #[arg(short, long, help = "Optional probability of failure")]
     probability_of_failure: Option<f32>,
+    #[arg(short, long, help = "Optional shares outstanding")]
+    shares_outstanding: Option<u32>,
 }
 
 impl Run for IntrinsicCliImpl {
@@ -56,6 +58,7 @@ impl Run for IntrinsicCliImpl {
             .add_cash(self.cash)
             .add_debt(self.debt)
             .add_probability_of_failure(self.probability_of_failure)
+            .add_shares_outstanding(self.shares_outstanding)
             .execute();
     }
 }

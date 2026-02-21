@@ -1,5 +1,6 @@
 use super::growth_assumption_builder::{GrowthAssumption, GrowthAssumptionBuilder};
 use crate::utils::financial::pv;
+use comfy_table::{presets::UTF8_FULL, Cell, Table, ColumnConstraint, Width};
 use core::f32;
 
 #[derive(PartialEq, Debug)]
@@ -7,8 +8,6 @@ pub struct IntrinsicBuilder {
     current_value: Option<f32>,
     // expected rate of return for the investment
     rate: Option<f32>,
-    // usually it's 10 or 15 for premium bussinesses
-    multiplier: Option<u8>,
     // some growth assumptions
     growth_assumptions: GrowthAssumptionBuilder,
     // optional cash amount
@@ -17,20 +16,22 @@ pub struct IntrinsicBuilder {
     debt: Option<f32>,
     // optional probability of failure
     probability_of_failure: Option<f32>,
+    // optional shares outstanding
+    shares_outstanding: Option<u32>,
 }
 
 impl IntrinsicBuilder {
     pub fn new() -> IntrinsicBuilder {
         IntrinsicBuilder {
             current_value: None,
-            rate: Some(0.15),     // default 15%
-            multiplier: Some(15), // default 10x
+            rate: Some(0.15), // default 15%
             growth_assumptions: GrowthAssumptionBuilder::new()
                 .add(GrowthAssumption(5, 0.05, None))
                 .add(GrowthAssumption(5, 0.05, None)), // default 5 % of fcf growth
             cash: None,
             debt: None,
             probability_of_failure: None,
+            shares_outstanding: None,
         }
     }
 
@@ -42,12 +43,6 @@ impl IntrinsicBuilder {
 
     pub fn add_rate(mut self, rate: f32) -> IntrinsicBuilder {
         self.rate = Some(rate);
-
-        self
-    }
-
-    pub fn add_multiplier(mut self, multiplier: u8) -> IntrinsicBuilder {
-        self.multiplier = Some(multiplier);
 
         self
     }
@@ -79,73 +74,185 @@ impl IntrinsicBuilder {
         self
     }
 
+    pub fn add_shares_outstanding(mut self, shares_outstanding: Option<u32>) -> IntrinsicBuilder {
+        self.shares_outstanding = shares_outstanding;
+
+        self
+    }
+
     pub fn execute(self) -> f32 {
         let mut result = 0.0;
         let mut current_value = self.current_value.unwrap();
-        let multiple = self.multiplier.unwrap_or(15);
         let rate = self.rate.unwrap();
         let growth_assumptions = &self.growth_assumptions.assumptions;
 
-        println!(
-            "\nRate: {},\nTerminal Multiple: {},\nGrowth assumptions: {:?}",
-            rate, multiple, growth_assumptions
-        );
+        // Table 1: ASSUMPTIONS
+        let mut assumptions_table = Table::new();
+        assumptions_table.load_preset(UTF8_FULL);
+        assumptions_table.set_header(vec!["Assumptions", ""]);
 
-        println!("\n{0: <4} | {1: <10} | {2: <10}", "year", "fv", "pv");
-        println!("{}", "-".repeat(30));
+        assumptions_table.add_row(vec![
+            Cell::new("Initial Value (FCF)"),
+            Cell::new(format!("${:.2}", current_value)),
+        ]);
+        assumptions_table.add_row(vec![
+            Cell::new("Discount Rate"),
+            Cell::new(format!("{:.1}%", rate * 100.0)),
+        ]);
+
+        // Display growth assumptions
+        let growth_years: Vec<String> = growth_assumptions
+            .iter()
+            .enumerate()
+            .map(|(i, &g)| format!("Year {}: {:.1}%", i + 1, g * 100.0))
+            .collect();
+        assumptions_table.add_row(vec![
+            Cell::new("Growth Assumptions"),
+            Cell::new(growth_years.join("\n")),
+        ]);
+
+        if let Some(cash_amt) = self.cash {
+            assumptions_table.add_row(vec![
+                Cell::new("Cash"),
+                Cell::new(format!("${:.2}", cash_amt)),
+            ]);
+        }
+
+        if let Some(debt_amt) = self.debt {
+            assumptions_table.add_row(vec![
+                Cell::new("Debt"),
+                Cell::new(format!("${:.2}", debt_amt)),
+            ]);
+        }
+
+        if let Some(prob) = self.probability_of_failure {
+            assumptions_table.add_row(vec![
+                Cell::new("Prob. of Failure"),
+                Cell::new(format!("{:.1}%", prob * 100.0)),
+            ]);
+        }
+
+        if let Some(shares) = self.shares_outstanding {
+            assumptions_table.add_row(vec![
+                Cell::new("Shares Outstanding"),
+                Cell::new(format!("{}", shares)),
+            ]);
+        }
+
+        // Table 2: CASH FLOW PROJECTIONS
+        let mut cashflow_table = Table::new();
+        cashflow_table.load_preset(UTF8_FULL);
+        cashflow_table.set_header(vec!["Year", "FV", "PV"]);
 
         let mut year = 0;
-        println!("{0: <4} | {1: <10} | {2: <10}", year, 0, current_value);
+        cashflow_table.add_row(vec![
+            Cell::new(year),
+            Cell::new(format!("{:.2}", 0.0)),
+            Cell::new(format!("{:.2}", current_value)),
+        ]);
 
         for assumption_rate in growth_assumptions.iter() {
             year += 1;
             current_value = current_value * (1. + assumption_rate);
-            let pv = pv(rate, year, current_value);
+            let pv_value = pv(rate, year, current_value);
 
-            println!("{0: <4} | {1: <10} | {2: <10}", year, current_value, pv);
-            result += pv;
+            cashflow_table.add_row(vec![
+                Cell::new(year),
+                Cell::new(format!("{:.2}", current_value)),
+                Cell::new(format!("{:.2}", pv_value)),
+            ]);
+            result += pv_value;
         }
 
         let last_growth = self.growth_assumptions.assumptions.last().unwrap();
+        let terminal_value = current_value / (self.rate.unwrap() - last_growth) as f32;
+        let sale_price = pv(rate, year, terminal_value);
 
-        let termial_value = current_value / (self.rate.unwrap() - last_growth) as f32;
+        cashflow_table.add_row(vec![
+            Cell::new("TV"),
+            Cell::new(format!("{:.2}", terminal_value)),
+            Cell::new(format!("{:.2}", sale_price)),
+        ]);
 
-        let sale_price = pv(rate, year, termial_value);
-
-        println!(
-            "{0: <4} | {1: <10} | {2: <10}",
-            "TV", termial_value, sale_price
-        );
-
-        println!("{}", "-".repeat(30));
         result += sale_price;
 
-        println!("{0: <17} | {1: <10}\n", "NPV", result);
+        cashflow_table.add_row(vec![
+            Cell::new("NPV"),
+            Cell::new(""),
+            Cell::new(format!("${:.2}", result)),
+        ]);
 
-        // Remove net debt (debt - cash)
-        if let (Some(debt_amt), Some(cash_amt)) = (self.debt, self.cash) {
-            let net_debt = debt_amt - cash_amt;
-            println!("Net Debt (Debt - Cash): {} - {} = {}", debt_amt, cash_amt, net_debt);
-            result -= net_debt;
-            println!("After Net Debt Adjustment: {}\n", result);
-        } else if let Some(debt_amt) = self.debt {
-            println!("Debt: {}", debt_amt);
+        // Table 3: ADJUSTMENTS
+        let mut adjustments_table = Table::new();
+        adjustments_table.load_preset(UTF8_FULL);
+        adjustments_table.set_header(vec!["Adjustments", ""]);
+
+        adjustments_table.add_row(vec![
+            Cell::new("PV of valuation"),
+            Cell::new(format!("${:.2}", result)),
+        ]);
+
+        if let Some(debt_amt) = self.debt {
+            adjustments_table.add_row(vec![
+                Cell::new("- Debt"),
+                Cell::new(format!("${:.2}", debt_amt)),
+            ]);
             result -= debt_amt;
-            println!("After Debt Adjustment: {}\n", result);
-        } else if let Some(cash_amt) = self.cash {
-            println!("Cash: {}", cash_amt);
-            result += cash_amt;
-            println!("After Cash Adjustment: {}\n", result);
         }
 
-        // Apply probability of failure
-        if let Some(prob_failure) = self.probability_of_failure {
-            let adjusted_result = result * (1.0 - prob_failure);
-            println!("Probability of Failure: {}%", prob_failure * 100.0);
-            println!("Before: {} × (1 - {}) = {}", result, prob_failure, adjusted_result);
-            result = adjusted_result;
-            println!("After Probability Adjustment: {}\n", result);
+        if let Some(cash_amt) = self.cash {
+            adjustments_table.add_row(vec![
+                Cell::new("+ Cash"),
+                Cell::new(format!("${:.2}", cash_amt)),
+            ]);
+            result += cash_amt;
         }
+
+        if let Some(prob_failure) = self.probability_of_failure {
+            let before_prob = result;
+            adjustments_table.add_row(vec![
+                Cell::new("× Prob. failure"),
+                Cell::new(format!("{:.1}%", prob_failure * 100.0)),
+            ]);
+            result = before_prob * (1.0 - prob_failure);
+        }
+
+        adjustments_table.add_row(vec![
+            Cell::new("= Intrinsic Value"),
+            Cell::new(format!("${:.2}", result)),
+        ]);
+
+        if let Some(shares) = self.shares_outstanding {
+            let value_per_share = result / shares as f32;
+            adjustments_table.add_row(vec![Cell::new("")]);
+            adjustments_table.add_row(vec![
+                Cell::new("÷ Shares Outstanding"),
+                Cell::new(format!("{}", shares)),
+            ]);
+            adjustments_table.add_row(vec![
+                Cell::new("= Value per Share"),
+                Cell::new(format!("${:.2}", value_per_share)),
+            ]);
+        }
+
+        // Create a main table with one row and three equal-sized cells
+        let mut main_table = Table::new();
+        main_table.load_preset(UTF8_FULL);
+        
+        // Set equal width for all three columns
+        main_table.set_constraints(vec![
+            ColumnConstraint::Absolute(Width::Fixed(45)),
+            ColumnConstraint::Absolute(Width::Fixed(45)),
+            ColumnConstraint::Absolute(Width::Fixed(45)),
+        ]);
+        
+        main_table.add_row(vec![
+            Cell::new(assumptions_table.to_string()),
+            Cell::new(cashflow_table.to_string()),
+            Cell::new(adjustments_table.to_string()),
+        ]);
+
+        println!("\n{}\n", main_table);
 
         result
     }
@@ -160,12 +267,12 @@ mod tests {
         let expected = IntrinsicBuilder {
             current_value: Some(15.0),
             rate: Some(0.15),
-            multiplier: Some(10),
             growth_assumptions: GrowthAssumptionBuilder::new()
                 .add(GrowthAssumption(10, 0.05, None)),
             cash: None,
             debt: None,
             probability_of_failure: None,
+            shares_outstanding: None,
         };
 
         let builded = IntrinsicBuilder::new()
@@ -173,8 +280,7 @@ mod tests {
             .add_rate(0.15)
             .add_growth_assumptions(
                 GrowthAssumptionBuilder::new().add(GrowthAssumption(10, 0.05, None)),
-            )
-            .add_multiplier(10);
+            );
 
         assert_eq!(expected, builded);
     }
@@ -184,7 +290,6 @@ mod tests {
         let intrisic = IntrinsicBuilder::new()
             .add_current_value(15.0)
             .add_rate(0.15)
-            .add_multiplier(15)
             .add_growth_assumptions(
                 GrowthAssumptionBuilder::new().add(GrowthAssumption(10, 0.05, None)),
             );
